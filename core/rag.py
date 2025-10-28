@@ -26,22 +26,19 @@ def get_vectorstore(collection_name:str)->Milvus:
     return vectorstore
 
 
-def load_docs_from_file(file_path:str)-> List[Document]:
+def ingest(file_path:str, collection_name:str, language:str, domain:str, section:str, topic:str, doc_type:str)-> List[Document]:
     documents:list[Document] = PDFMinerLoader(file_path).load()
     for doc in documents:
         doc.metadata['source'] = file_path.split("/")[-1] 
-    return documents
-
-
-def get_chunks(docs:List[Document], language, domain, section, topic, doc_type)-> List[Document]:
+        
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,  # chunk size (characters)
         chunk_overlap=200,  # chunk overlap (characters)
         add_start_index=True,  # track index in original document
     )
     doc_id = str(uuid.uuid4())
-    chunks = text_splitter.split_documents(docs)
-    chunks = [Document(page_content=chunk.page_content, 
+    chunks = text_splitter.split_documents(documents)
+    docs = [Document(page_content=chunk.page_content, 
                      metadata={
                         "source_name": chunk.metadata['source'],
                         'total_pages': chunk.metadata['total_pages'], 
@@ -51,10 +48,6 @@ def get_chunks(docs:List[Document], language, domain, section, topic, doc_type)-
                         "doc_id": doc_id, "chunk_id":str(uuid.uuid4()) 
                     }
     ) for chunk in chunks]
-    return chunks
-
-
-def add_document(collection_name:str, docs:List[Document]):
     vectorstore = get_vectorstore(collection_name)
     vectorstore.add_documents(docs)
 
