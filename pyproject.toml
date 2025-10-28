@@ -1,0 +1,19 @@
+[project]
+name = "rags-task"
+version = "0.1.0"
+description = "Hierarchical Metadata RAG vs Standard RAG (Accuracy & Speed)"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chromadb>=1.2.2",
+    "google-genai>=1.46.0",
+    "gradio>=5.49.1",
+    "gradio-client>=1.13.3",
+    "langdetect>=1.0.9",
+    "numpy>=2.3.4",
+    "pandas>=2.3.3",
+    "pymilvus>=2.6.2",
+    "pypdf>=6.1.3",
+    "pytest>=8.4.2",
+    "pyyaml>=6.0.3",
+]
