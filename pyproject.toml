@@ -1,22 +1,23 @@
 [project]
-name = "rags-task"
+name = "hier-rag"
 version = "0.1.0"
 description = "Hierarchical Metadata RAG vs Standard RAG (Accuracy & Speed)"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "gradio>=5.49.1",
-    "langchain[google-genai]>=1.0.2",
+    "langchain[google-genai,openai]>=1.0.2",
     "langchain-community>=0.4.1",
     "langchain-milvus>=0.2.2",
     "langchain-text-splitters>=1.0.0",
     "pdfminer-six>=20250506",
+    "milvus-lite>=2.5.1",
 ]
 
 [dependency-groups]
 dev = [
+    "huggingface-hub[cli]>=1.0.0",
     "ipykernel>=7.1.0",
-    "milvus-lite>=2.5.1",
     "pytest>=8.4.2",
     "ruff>=0.14.2",
 ]

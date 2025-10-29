@@ -37,21 +37,22 @@ def _simulate_rag_query(
     print(f"Question: {question}")
     print(f"Active Filters: {active_filters.model_dump()}")
 
-    # Simulate delay (making hierarchical slightly faster to show a difference)
+    ret_start_time = time.time()
     if query_type_label == "Hierarchical":
         docs = retrieval_filter(question, index_name, active_filters)
     else:
         docs = retrieval(question, index_name, active_filters.language)
-
+    ret_end_time = time.time()
+    ret_latency = f"{ret_end_time - ret_start_time:.2f}s"
     answer = generate(question, docs)
-    retrieval_results = [doc.page_content for doc in docs]
+    retrieval_results = [doc.page_content + f"\n### source: {doc.metadata.get("source_name","None")}" for doc in docs]
 
     snippets_md = "\n\n---\n\n".join(retrieval_results)
 
     end_time = time.time()
     latency = f"{end_time - start_time:.2f}s"
-    answer = answer + f"\n\n## Latency: {latency}"
-    snippets_md = f"\n\n## Retrieval results:\n" + snippets_md 
+    answer = f"### Total Latency: {latency}\n### Retrieval Latency: {ret_latency}\n" + answer 
+    snippets_md = f"\n\n## Retrieval results:\n"  + snippets_md 
     print(f"--- {query_type_label} Query Complete ({latency}) ---")
 
     return answer, snippets_md
@@ -78,13 +79,11 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
     loading_snips = "Loading… retrieving supporting snippets…"
     yield loading_answer, loading_snips, loading_answer, loading_snips
 
-    # --- 1. Base RAG Simulation ---
     base_filter = FilterData(language=lang)
     base_answer, base_snippets = _simulate_rag_query(
         question, index_name, base_filter, "Base"
     )
 
-    # --- 2. Hierarchical RAG Simulation ---
     hier_filters = FilterData(
         language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
     )
@@ -223,12 +222,12 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 with gr.Row():
                     with gr.Column():
                         gr.Markdown("#### Base RAG Results")
-                        base_answer_output = gr.Markdown(label="Answer",show_label=True)
-                        base_snippets_output = gr.Markdown(label="Supporting Snippets",show_label=True)
+                        base_answer_output = gr.Markdown(container= True)
+                        base_snippets_output = gr.Markdown(container= True)
                     with gr.Column():
                         gr.Markdown("#### Hierarchical RAG Results")
-                        hier_answer_output = gr.Markdown(label="Answer",show_label=True)
-                        hier_snippets_output = gr.Markdown(label="Supporting Snippets",show_label=True)
+                        hier_answer_output = gr.Markdown(container= True)
+                        hier_snippets_output = gr.Markdown(container= True)
                   
 
         chat_button.click(

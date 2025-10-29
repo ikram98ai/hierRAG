@@ -2,6 +2,8 @@ from langchain_community.document_loaders import PDFMinerLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_milvus import Milvus
 from dotenv import load_dotenv, find_dotenv
 from typing import List, Literal, Optional
@@ -11,8 +13,10 @@ import uuid
 find_dotenv()
 load_dotenv()
 
-model = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash-lite")
-emb_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+# model = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash-lite")
+# emb_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", output_dimensionality=1536)
+model = ChatOpenAI(model="gpt-5-mini")
+emb_model = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=1536)
 
 MILVUS_URI = "./rag_task.db"
 
@@ -77,8 +81,11 @@ def ingest(file_paths: List[str], collection_name: str, filter_data: FilterData)
 
 def retrieval_filter(query: str, collection_name: str, filter_data: FilterData):
     vectorstore = get_vectorstore(collection_name)
-    expr = f'language == "{filter_data.language}" and domain == "{filter_data.domain}" and \
-               section == "{filter_data.section}" and topic == "{filter_data.topic}" and doc_type == "{filter_data.doc_type}"'
+    expr = f"language == '{filter_data.language}' or \
+             domain == '{filter_data.domain}' or \
+             section == '{filter_data.section}' or \
+             topic == '{filter_data.topic}' or \
+             doc_type == '{filter_data.doc_type}'"
     docs = vectorstore.similarity_search(query, k=5, expr=expr)
     return docs
 
@@ -92,8 +99,8 @@ def retrieval(query: str, collection_name: str, language: str):
 
 def generate(query: str, ctx_docs: List[Document]):
     context = "\n".join([doc.page_content for doc in ctx_docs])
-    prompt = f"""Answer the user query according to the given context.
-    query: {query}
+    prompt = f"""Answer shortly to the user question according to the given context. Only answer if the context is given to you.
+    question: {query}
     context: {context}
 """
     output = model.invoke(prompt)
