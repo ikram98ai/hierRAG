@@ -1,10 +1,11 @@
 from langchain_community.document_loaders import PDFMinerLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_milvus import Milvus
+from langchain_community.retrievers import BM25Retriever
+from langchain_milvus import Milvus, BM25BuiltInFunction
 from dotenv import load_dotenv, find_dotenv
 from typing import List, Literal, Optional
 from pydantic import BaseModel
@@ -26,9 +27,12 @@ def get_vectorstore(collection_name: str) -> Milvus:
         embedding_function=emb_model,
         collection_name=collection_name,
         connection_args={"uri": MILVUS_URI},
+        # builtin_function=BM25BuiltInFunction(output_field_names="sparse"),
+        # text_field="text",
+        # vector_field=["dense", "sparse"],
         index_params={"index_type": "FLAT", "metric_type": "L2"},
     )
-    print(f"vector store successfully initialized for {collection_name}")
+    print(f"vectorstore successfully initialized for {collection_name}")
     return vectorstore
 
 
@@ -78,26 +82,37 @@ def ingest(file_paths: List[str], collection_name: str, filter_data: FilterData)
     print(success_message)
     return success_message
 
+def reranker(query:str, docs:List[Document])-> List[Document]:
+    print(f"Retrieved {len(docs)} documents")
+    retriever = BM25Retriever.from_documents(docs)
+    result = retriever.invoke(query)
+    print("RERANKER Result: ", len(result), result[0])
+    return result
 
-def retrieval_filter(query: str, collection_name: str, filter_data: FilterData):
+def retrieval(query: str, collection_name: str, filter_data: FilterData)-> List[tuple[Document, float]]:
     vectorstore = get_vectorstore(collection_name)
-    expr = f"language == '{filter_data.language}' or \
-             domain == '{filter_data.domain}' or \
-             section == '{filter_data.section}' or \
-             topic == '{filter_data.topic}' or \
-             doc_type == '{filter_data.doc_type}'"
-    docs = vectorstore.similarity_search(query, k=5, expr=expr)
+    
+    filters = [f'language == "{filter_data.language}"']
+    if filter_data.doc_type:
+        filters.append(f'doc_type == "{filter_data.doc_type}"')
+    if filter_data.domain:
+        filters.append(f'domain == "{filter_data.domain}"')
+    if filter_data.section:
+        filters.append(f'section == "{filter_data.section}"')
+    if filter_data.topic:
+        filters.append(f'topic == "{filter_data.topic}"')
+    
+    expr = " and ".join(filters) if filters else None
+    
+    results = vectorstore.similarity_search_with_relevance_scores(query, k=5, expr=expr)
+    docs = []
+    for doc,score in results:
+        doc.metadata['similarity_score'] = score
+        docs.append(doc)
+    # docs = reranker(query, docs)
     return docs
 
-
-def retrieval(query: str, collection_name: str, language: str):
-    vectorstore = get_vectorstore(collection_name)
-    expr = f'language == "{language}"'
-    docs = vectorstore.similarity_search(query, k=5, expr=expr)
-    return docs
-
-
-def generate(query: str, ctx_docs: List[Document]):
+def generate(query: str, ctx_docs: List[Document])->str:
     context = "\n".join([doc.page_content for doc in ctx_docs])
     prompt = f"""Answer shortly to the user question according to the given context. Only answer if the context is given to you.
     question: {query}

@@ -1,6 +1,6 @@
 import gradio as gr
 import time
-from core.rag import ingest, generate, retrieval, retrieval_filter, FilterData
+from core.rag import ingest, generate, retrieval, FilterData
 
 
 def process_files(files, index_name, lang, domain, section, topic, doc_type):
@@ -25,11 +25,16 @@ def process_files(files, index_name, lang, domain, section, topic, doc_type):
     result = ingest(files, index_name, filter_data)
     return {"status": "success", "message": result}
 
-def _simulate_rag_query(
+def add_metric(doc):
+    return (f"\n### source: {doc.metadata.get('source_name','None')}"
+            f"\n### similarity_score: {doc.metadata.get('similarity_score','None'):.4f}"
+        )
+
+def _rag_query(
     question, index_name, active_filters: FilterData, query_type_label
 ):
     """
-    Helper function to simulate a single RAG query.
+    Helper function for a single RAG query.
     """
     start_time = time.time()
 
@@ -39,15 +44,17 @@ def _simulate_rag_query(
 
     ret_start_time = time.time()
     if query_type_label == "Hierarchical":
-        docs = retrieval_filter(question, index_name, active_filters)
+        docs = retrieval(question, index_name, active_filters)
     else:
-        docs = retrieval(question, index_name, active_filters.language)
+        docs = retrieval(question, index_name, active_filters)
+    retrieval_results = [doc.page_content + add_metric(doc) for doc in docs]
+    snippets_md = "\n\n---\n\n".join(retrieval_results)
+
     ret_end_time = time.time()
     ret_latency = f"{ret_end_time - ret_start_time:.2f}s"
-    answer = generate(question, docs)
-    retrieval_results = [doc.page_content + f"\n### source: {doc.metadata.get("source_name","None")}" for doc in docs]
 
-    snippets_md = "\n\n---\n\n".join(retrieval_results)
+    answer = generate(question, docs)
+    
 
     end_time = time.time()
     latency = f"{end_time - start_time:.2f}s"
@@ -80,14 +87,14 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
     yield loading_answer, loading_snips, loading_answer, loading_snips
 
     base_filter = FilterData(language=lang)
-    base_answer, base_snippets = _simulate_rag_query(
+    base_answer, base_snippets = _rag_query(
         question, index_name, base_filter, "Base"
     )
 
     hier_filters = FilterData(
         language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
     )
-    hier_answer, hier_snippets = _simulate_rag_query(
+    hier_answer, hier_snippets = _rag_query(
         question, index_name, hier_filters, "Hierarchical"
     )
 
