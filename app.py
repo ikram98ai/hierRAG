@@ -1,6 +1,8 @@
 import gradio as gr
 import time
-from core.rag import ingest, generate, retrieval, FilterData
+from core.ingest import ingest
+from core.retrieval import generate, retrieval
+from core.index import MetaData
 import yaml
 
 
@@ -20,7 +22,7 @@ def process_files(files, index_name, lang, domain, section, topic, doc_type):
         f"With Metadata: lang={lang}, domain={domain}, section={section}, topic={topic}, doc_type={doc_type}"
     )
 
-    filter_data = FilterData(
+    filter_data = MetaData(
         language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
     )
     result = ingest(files, index_name, filter_data)
@@ -32,7 +34,7 @@ def add_metric(doc):
         )
 
 def _rag_query(
-    question, index_name, active_filters: FilterData, query_type_label
+    question, index_name, active_filters: MetaData, query_type_label
 ):
     """
     Helper function for a single RAG query.
@@ -85,7 +87,7 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
     loading_snips = "Loading… retrieving supporting snippets…"
     yield loading_answer, loading_snips, loading_answer, loading_snips
 
-    base_filter = FilterData(language=lang)
+    base_filter = MetaData(language=lang)
     base_answer, base_snippets = _rag_query(
         question, index_name, base_filter, "Base"
     )
@@ -94,7 +96,7 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
         hier_answer = hier_snippets = "Please select at least one filter for hierarchical RAG"
         
     else:
-        hier_filters = FilterData(
+        hier_filters = MetaData(
             language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
         )
         hier_answer, hier_snippets = _rag_query(
@@ -223,8 +225,6 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     choices=INGEST_DOC_TYPE_CHOICES,
                     value=INGEST_DOC_TYPE_CHOICES[0],
                 )
-                gr.Markdown("##### Optional Filters (from YAML)")
-
                 domain_select_ingest = gr.Dropdown(
                     label="Domain",
                     choices=[],  # Populated dynamically
