@@ -4,7 +4,6 @@ from langchain_community.retrievers import BM25Retriever
 from dotenv import load_dotenv, find_dotenv
 from typing import List
 from .index import get_vectorstore, MetaData
-from .ingest import metadata_classification
 
 find_dotenv()
 load_dotenv()
@@ -28,15 +27,15 @@ def retrieval(
         f"RETRIEVAL query: {query[:40]}, for {collection_name} collection, with filters: {filter_data}"
     )
 
-    filters = [f'language == "{filter_data["language"]}"']
-    if filter_data["doc_type"]:
-        filters.append(f'doc_type == "{filter_data["doc_type"]}"')
-    if filter_data["domain"]:
-        filters.append(f'domain == "{filter_data["domain"]}"')
-    if filter_data["section"]:
-        filters.append(f'section == "{filter_data["section"]}"')
-    if filter_data["topic"]:
-        filters.append(f'topic == "{filter_data["topic"]}"')
+    filters = [f'language == "{filter_data.language}"']
+    if filter_data.doc_type:
+        filters.append(f'doc_type == "{filter_data.doc_type}"')
+    if filter_data.domain:
+        filters.append(f'domain == "{filter_data.domain}"')
+    if filter_data.section:
+        filters.append(f'section == "{filter_data.section}"')
+    if filter_data.topic:
+        filters.append(f'topic == "{filter_data.topic}"')
 
     expr = " and ".join(filters) if filters else None
     try:
@@ -44,6 +43,7 @@ def retrieval(
             query, k=5, expr=expr
         )
     except ValueError as e:
+        print(f"Error in retrieval: {str(e)}")
         return []
     docs = []
     for doc, score in results:

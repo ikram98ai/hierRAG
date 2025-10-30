@@ -60,7 +60,7 @@ def _rag_query(
     end_time = time.time()
     latency = f"{end_time - start_time:.2f}s"
     answer = f"### Total Latency: {latency}\n### Retrieval Latency: {ret_latency}\n" + answer 
-    snippets_md = f"\n\n## Retrieval results:\n"  + snippets_md 
+    snippets_md = "\n\n## Retrieval results:\n"  + snippets_md 
     print(f"--- {query_type_label} Query Complete ({latency}) ---")
 
     return answer, snippets_md
