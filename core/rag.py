@@ -27,11 +27,11 @@ def get_vectorstore(collection_name: str) -> Milvus:
         embedding_function=emb_model,
         collection_name=collection_name,
         connection_args={"uri": MILVUS_URI},
+        index_params={"index_type": "FLAT", "metric_type": "L2"},
+    )
         # builtin_function=BM25BuiltInFunction(output_field_names="sparse"),
         # text_field="text",
         # vector_field=["dense", "sparse"],
-        index_params={"index_type": "FLAT", "metric_type": "L2"},
-    )
     print(f"vectorstore successfully initialized for {collection_name}")
     return vectorstore
 
@@ -90,6 +90,7 @@ def reranker(query:str, docs:List[Document])-> List[Document]:
     return result
 
 def retrieval(query: str, collection_name: str, filter_data: FilterData)-> List[tuple[Document, float]]:
+    print(f"RETRIEVAL query: {query[:40]}, for {collection_name} collection, with filters: {filter_data.model_dump()}")
     vectorstore = get_vectorstore(collection_name)
     
     filters = [f'language == "{filter_data.language}"']
@@ -103,13 +104,16 @@ def retrieval(query: str, collection_name: str, filter_data: FilterData)-> List[
         filters.append(f'topic == "{filter_data.topic}"')
     
     expr = " and ".join(filters) if filters else None
-    
-    results = vectorstore.similarity_search_with_relevance_scores(query, k=5, expr=expr)
+    try:
+        results = vectorstore.similarity_search_with_relevance_scores(query, k=5, expr=expr)
+    except ValueError as e:
+        return []
     docs = []
     for doc,score in results:
         doc.metadata['similarity_score'] = score
         docs.append(doc)
     # docs = reranker(query, docs)
+    print("RETRIEVED DOCS: ", len(docs))
     return docs
 
 def generate(query: str, ctx_docs: List[Document])->str:

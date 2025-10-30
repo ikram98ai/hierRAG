@@ -12,3 +12,4 @@ wheels/
 *.db*
 data/
 .ruff_cache/
+hierRAG

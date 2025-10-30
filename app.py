@@ -1,6 +1,7 @@
 import gradio as gr
 import time
 from core.rag import ingest, generate, retrieval, FilterData
+import yaml
 
 
 def process_files(files, index_name, lang, domain, section, topic, doc_type):
@@ -43,10 +44,8 @@ def _rag_query(
     print(f"Active Filters: {active_filters.model_dump()}")
 
     ret_start_time = time.time()
-    if query_type_label == "Hierarchical":
-        docs = retrieval(question, index_name, active_filters)
-    else:
-        docs = retrieval(question, index_name, active_filters)
+    
+    docs = retrieval(question, index_name, active_filters)
     retrieval_results = [doc.page_content + add_metric(doc) for doc in docs]
     snippets_md = "\n\n---\n\n".join(retrieval_results)
 
@@ -91,42 +90,112 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
         question, index_name, base_filter, "Base"
     )
 
-    hier_filters = FilterData(
-        language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
-    )
-    hier_answer, hier_snippets = _rag_query(
-        question, index_name, hier_filters, "Hierarchical"
-    )
+    if all([domain==None, section==None, topic==None, doc_type==None]):
+        hier_answer = hier_snippets = "Please select at least one filter for hierarchical RAG"
+        
+    else:
+        hier_filters = FilterData(
+            language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
+        )
+        hier_answer, hier_snippets = _rag_query(
+            question, index_name, hier_filters, "Hierarchical"
+        )
 
     # Final yield with actual results
     yield base_answer, base_snippets, hier_answer, hier_snippets
 
 
-# --- Dummy data for filters ---
-INDEX_CHOICES = ["hospital", "bank", "fluid_simulation"]
-LANG_CHOICES = ["en", "ja"]
-DOMAIN_CHOICES = ["Any", "Healthcare", "Finance", "Engineering", "Policy", "HR"]
-SECTION_CHOICES = [
-    "Any",
-    "Onboarding",
-    "Patient Care",
-    "Risk Assessment",
-    "Simulation_Parameters",
-]
-TOPIC_CHOICES = ["Any", "Diagnostics", "Loans", "CFD_Models", "Compliance"]
-DOC_TYPE_CHOICES = ["Any", "policy", "manual", "faq"]
+def load_yaml_config(yaml_file):
+    """
+    Parses the uploaded YAML file and returns the config dictionary.
+    This dictionary is stored in a hidden gr.State() component.
+    """
+    if yaml_file is None:
+        gr.Warning("No YAML file provided.")
+        return None
+    try:
+        with open(yaml_file.name, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        if not isinstance(config, dict):
+            raise ValueError("YAML content must be a top-level dictionary.")
+        
+        gr.Info("Configuration loaded successfully!")
+        return config  # This will be stored in config_state
 
-# --- New: Create choice lists for ingestion (without "Any") ---
-INGEST_DOMAIN_CHOICES = [c for c in DOMAIN_CHOICES if c != "Any"]
-INGEST_SECTION_CHOICES = [c for c in SECTION_CHOICES if c != "Any"]
-INGEST_TOPIC_CHOICES = [c for c in TOPIC_CHOICES if c != "Any"]
-INGEST_DOC_TYPE_CHOICES = [c for c in DOC_TYPE_CHOICES if c != "Any"]
+    except Exception as e:
+        print(f"Error processing YAML: {e}")
+        gr.Warning(f"Failed to load YAML config: {e}")
+        return None
+
+def update_filters_for_index_ingest(index, config):
+    """
+    Updates the Ingestion filter dropdowns based on the selected index and loaded config.
+    """
+    if config is None or index is None:
+        empty_update = gr.update(choices=[], value=None)
+        return empty_update, empty_update, empty_update
+
+    index_data = config.get(index, {})
+    
+    domains = sorted(index_data.get('domains', []))
+    sections = sorted(index_data.get('sections', []))
+    topics = sorted(index_data.get('topics', []))
+    
+    return (
+        gr.update(choices=domains, value=domains[0] if domains else None),
+        gr.update(choices=sections, value=sections[0] if sections else None),
+        gr.update(choices=topics, value=topics[0] if topics else None)
+    )
+
+def update_filters_for_index_chat(index, config):
+    """
+    Updates the Chat filter dropdowns based on the selected index and loaded config.
+    """
+    if config is None or index is None:
+        empty_update = gr.update(choices=[None], value=None)
+        return empty_update, empty_update, empty_update
+
+    index_data = config.get(index, {})
+
+    domains = [None] + sorted(index_data.get('domains', []))
+    sections = [None] + sorted(index_data.get('sections', []))
+    topics = [None] + sorted(index_data.get('topics', []))
+
+    return (
+        gr.update(choices=domains, value=None),
+        gr.update(choices=sections, value=None),
+        gr.update(choices=topics, value=None)
+    )
+
+
+# --- Static choices (not from YAML) ---
+LANG_CHOICES = ["en", "ja"]
+DOC_TYPE_CHOICES = [None, "policy", "manual", "faq"]
+INGEST_DOC_TYPE_CHOICES = [c for c in DOC_TYPE_CHOICES if c is not None]
+INDEX_CHOICES = ["hospital", "bank", "fluid_simulation"]
 
 
 # --- Build the Gradio UI ---
 
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("# Document Ingestion and RAG Chat UI")
+    
+    # Hidden state to store the parsed YAML config
+    config_state = gr.State()
+
+    with gr.Column(variant="panel"):
+        gr.Markdown(
+            "⬆️ **START HERE:** Upload your `config.yaml` file to enable the Domain, Section, and Topic filters below.", 
+            # scale=2, 
+            label="Instructions"
+        )
+        yaml_uploader = gr.File(
+            label="Upload Configuration YAML",
+            file_types=[".yaml", ".yml"],
+            scale=2
+        )
+
 
     with gr.Tab("Document Ingestion"):
         gr.Markdown(
@@ -140,32 +209,36 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     file_types=[".pdf", ".txt"],
                 )
                 index_select_ingest = gr.Dropdown(
-                    label="Select Index", choices=INDEX_CHOICES
+                    label="Select Index", 
+                    choices=INDEX_CHOICES,
+                    value=INDEX_CHOICES[0]
                 )
 
-                gr.Markdown("#### Set Document Metadata")
+                gr.Markdown("### Set Document Metadata")
                 lang_select_ingest = gr.Dropdown(
                     label="Language", choices=LANG_CHOICES, value=LANG_CHOICES[0]
-                )
-                domain_select_ingest = gr.Dropdown(
-                    label="Domain",
-                    choices=INGEST_DOMAIN_CHOICES,
-                    value=INGEST_DOMAIN_CHOICES[0],
-                )
-                section_select_ingest = gr.Dropdown(
-                    label="Section",
-                    choices=INGEST_SECTION_CHOICES,
-                    value=INGEST_SECTION_CHOICES[0],
-                )
-                topic_select_ingest = gr.Dropdown(
-                    label="Topic",
-                    choices=INGEST_TOPIC_CHOICES,
-                    value=INGEST_TOPIC_CHOICES[0],
                 )
                 doc_type_select_ingest = gr.Dropdown(
                     label="Doc Type",
                     choices=INGEST_DOC_TYPE_CHOICES,
                     value=INGEST_DOC_TYPE_CHOICES[0],
+                )
+                gr.Markdown("##### Optional Filters (from YAML)")
+
+                domain_select_ingest = gr.Dropdown(
+                    label="Domain",
+                    choices=[],  # Populated dynamically
+                    info="Upload YAML and select an index to populate."
+                )
+                section_select_ingest = gr.Dropdown(
+                    label="Section",
+                    choices=[],  # Populated dynamically
+                    info="Upload YAML and select an index to populate."
+                )
+                topic_select_ingest = gr.Dropdown(
+                    label="Topic",
+                    choices=[],  # Populated dynamically
+                    info="Upload YAML and select an index to populate."
                 )
 
                 ingest_button = gr.Button("Process and Ingest Files", variant="primary")
@@ -196,24 +269,35 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             with gr.Column(scale=1, min_width=300):
                 gr.Markdown("### 1. Select Index & Filters")
                 index_select_chat = gr.Dropdown(
-                    label="Select Index", choices=INDEX_CHOICES
+                    label="Select Index", 
+                    choices=INDEX_CHOICES,
+                    value=INDEX_CHOICES[0]
                 )
                 lang_select = gr.Dropdown(
                     label="Language", choices=LANG_CHOICES, value="en"
                 )
-
-                gr.Markdown("#### Optional Filters")
-                domain_select = gr.Dropdown(
-                    label="Domain", choices=DOMAIN_CHOICES, value=None
-                )
-                section_select = gr.Dropdown(
-                    label="Section", choices=SECTION_CHOICES, value=None
-                )
-                topic_select = gr.Dropdown(
-                    label="Topic", choices=TOPIC_CHOICES, value=None
-                )
                 doc_type_select = gr.Dropdown(
                     label="Doc Type", choices=DOC_TYPE_CHOICES, value=None
+                )
+
+                gr.Markdown("#### Optional Filters (from YAML)")
+                domain_select = gr.Dropdown(
+                    label="Domain", 
+                    choices=[None], 
+                    value=None,  # Populated dynamically
+                    info="Upload YAML and select an index to populate."
+                )
+                section_select = gr.Dropdown(
+                    label="Section", 
+                    choices=[None], 
+                    value=None,  # Populated dynamically
+                    info="Upload YAML and select an index to populate."
+                )
+                topic_select = gr.Dropdown(
+                    label="Topic", 
+                    choices=[None], 
+                    value=None,  # Populated dynamically
+                    info="Upload YAML and select an index to populate."
                 )
 
 
@@ -255,6 +339,41 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 hier_snippets_output,
             ],
         )
+
+    # --- Event Handlers ---
+
+    # 1. When YAML is uploaded, store its content in config_state
+    #    .then() chain:
+    #    a) Update the Ingest dropdowns based on the default selected index
+    #    b) Update the Chat dropdowns based on the default selected index
+    yaml_uploader.upload(
+        fn=load_yaml_config,
+        inputs=[yaml_uploader],
+        outputs=[config_state]
+    ).then(
+        fn=update_filters_for_index_ingest,
+        inputs=[index_select_ingest, config_state],
+        outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest]
+    ).then(
+        fn=update_filters_for_index_chat,
+        inputs=[index_select_chat, config_state],
+        outputs=[domain_select, section_select, topic_select]
+    )
+
+    # 2. When the Ingest index changes, update its filters
+    index_select_ingest.change(
+        fn=update_filters_for_index_ingest,
+        inputs=[index_select_ingest, config_state],
+        outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest]
+    )
+
+    # 3. When the Chat index changes, update its filters
+    index_select_chat.change(
+        fn=update_filters_for_index_chat,
+        inputs=[index_select_chat, config_state],
+        outputs=[domain_select, section_select, topic_select]
+    )
+
 
 if __name__ == "__main__":
     demo.launch()
