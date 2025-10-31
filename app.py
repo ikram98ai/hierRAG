@@ -1,9 +1,19 @@
 import gradio as gr
 import time
+from pathlib import Path
 from core.ingest import ingest
 from core.retrieval import generate, retrieval
 from core.index import MetaData
 import yaml
+
+# Import evaluation functions
+from core.eval import (
+    run_full_evaluation, 
+    save_results, 
+    generate_summary_report,
+    setup_test_data,
+    EVAL_QUERIES
+)
 
 
 def process_files(files, index_name, lang, domain, section, topic, doc_type):
@@ -15,7 +25,6 @@ def process_files(files, index_name, lang, domain, section, topic, doc_type):
         return "Please upload at least one file."
     if not index_name:
         return "Please select an index."
-    # Add checks for new inputs
 
     print(f"--- Starting Ingestion for Index: {index_name} ---")
     print(
@@ -25,7 +34,7 @@ def process_files(files, index_name, lang, domain, section, topic, doc_type):
     filter_data = MetaData(
         language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
     )
-    result = ingest(files, index_name, filter_data)
+    result = ingest(index_name, filter_data, files)
     return {"status": "success", "message": result}
 
 def add_metric(doc):
@@ -72,7 +81,6 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
     This version is a generator: it yields a loading state first so the UI shows
     a loading animation/text immediately, then yields final results.
     """
-    # Early validation -> yield immediate error states so the UI updates right away
     if not index_name:
         error_msg = "Please select an index to query."
         yield error_msg, "", error_msg, ""
@@ -82,7 +90,6 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
         yield error_msg, "", error_msg, ""
         return
 
-    # Yield initial loading placeholders so the UI shows "loading" while work runs
     loading_answer = "Loading… generating answer (this may take a few seconds)…"
     loading_snips = "Loading… retrieving supporting snippets…"
     yield loading_answer, loading_snips, loading_answer, loading_snips
@@ -103,14 +110,12 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
             question, index_name, hier_filters, "Hierarchical"
         )
 
-    # Final yield with actual results
     yield base_answer, base_snippets, hier_answer, hier_snippets
 
 
 def load_yaml_config(yaml_file):
     """
     Parses the uploaded YAML file and returns the config dictionary.
-    This dictionary is stored in a hidden gr.State() component.
     """
     if yaml_file is None:
         gr.Warning("No YAML file provided.")
@@ -123,14 +128,14 @@ def load_yaml_config(yaml_file):
             raise ValueError("YAML content must be a top-level dictionary.")
         
         gr.Info("Configuration loaded successfully!")
-        return config  # This will be stored in config_state
+        return config
 
     except Exception as e:
         print(f"Error processing YAML: {e}")
         gr.Warning(f"Failed to load YAML config: {e}")
         return None
 
-def update_filters_for_index_ingest(index, config):
+def update_metadata_for_index_ingest(index, config):
     """
     Updates the Ingestion filter dropdowns based on the selected index and loaded config.
     """
@@ -171,6 +176,83 @@ def update_filters_for_index_chat(index, config):
     )
 
 
+def setup_synthetic_data(collections):
+    """Setup synthetic test data for evaluation"""
+    if not collections:
+        return "⚠️ Please select at least one collection"
+    
+    try:
+        docs_length = setup_test_data(collections)
+        return f"✅ Successfully ingested {docs_length} synthetic test data for each: {', '.join(collections)}"
+    except Exception as e:
+        return f"❌ Error setting up test data: {str(e)}"
+
+
+def run_evaluation_batch(collections, output_dir):
+    """Run full batch evaluation"""
+    if not collections:
+        return (
+            "⚠️ Please select at least one collection",
+            None,
+            None,
+            None,
+            "No evaluation run"
+        )
+    
+    try:
+        # Create output directory
+        Path(output_dir).mkdir(exist_ok=True, parents=True)
+        
+        # Run evaluation
+        results = run_full_evaluation(collections, output_dir)
+        
+        # Save results
+        csv_path, json_path = save_results(results, output_dir)
+        md_path = generate_summary_report(results, output_dir)
+        
+        # Create summary statistics
+        import numpy as np
+        base_results = results["base"]
+        hier_results = results["hierarchical"]
+        
+        summary_stats = {
+            "Total Queries": len(base_results),
+            "Collections": ", ".join(collections),
+            "Base Hit@5": f"{np.mean([r.hit_at_5 for r in base_results]) * 100:.1f}%",
+            "Hier Hit@5": f"{np.mean([r.hit_at_5 for r in hier_results]) * 100:.1f}%",
+            "Base MRR": f"{np.mean([r.mrr for r in base_results]):.3f}",
+            "Hier MRR": f"{np.mean([r.mrr for r in hier_results]):.3f}",
+            "Base Avg Latency": f"{np.mean([r.total_latency_ms for r in base_results]):.0f}ms",
+            "Hier Avg Latency": f"{np.mean([r.total_latency_ms for r in hier_results]):.0f}ms",
+        }
+        
+        # Load markdown summary
+        with open(md_path, 'r') as f:
+            summary_md = f.read()
+        
+        # Prepare download files
+        return (
+            f"✅ Evaluation complete! Results saved to {output_dir}/",
+            summary_stats,
+            str(csv_path),
+            str(json_path),
+            summary_md
+        )
+        
+    except Exception as e:
+        return (
+            f"❌ Error during evaluation: {str(e)}",
+            None,
+            None,
+            None,
+            f"Error: {str(e)}"
+        )
+
+def get_predefined_queries_list():
+    """Get list of predefined queries for dropdown"""
+    return [""] + [f"{i}: {q.model_dump()}" for i, q in enumerate(EVAL_QUERIES)]
+
+
 # --- Static choices (not from YAML) ---
 LANG_CHOICES = ["en", "ja"]
 DOC_TYPE_CHOICES = [None, "policy", "manual", "faq"]
@@ -178,28 +260,26 @@ INGEST_DOC_TYPE_CHOICES = [c for c in DOC_TYPE_CHOICES if c is not None]
 INDEX_CHOICES = ["hospital", "bank", "fluid_simulation"]
 
 
-# --- Build the Gradio UI ---
+# ============================================================================
+# BUILD THE GRADIO UI
+# ============================================================================
 
-with gr.Blocks(theme=gr.themes.Soft()) as demo:
-    gr.Markdown("# Document Ingestion and RAG Chat UI")
+with gr.Blocks(theme=gr.themes.Soft(), title="RAG Evaluation System") as demo:
+    gr.Markdown("# 📊 Document Ingestion and RAG Evaluation System")
     
     # Hidden state to store the parsed YAML config
     config_state = gr.State()
 
     with gr.Column(variant="panel"):
         gr.Markdown(
-            "⬆️ **START HERE:** Upload your `config.yaml` file to enable the Domain, Section, and Topic filters below.", 
-            # scale=2, 
-            label="Instructions"
+            "⬆️ **START HERE:** Upload your `config.yaml` file to enable the Domain, Section, and Topic filters below."
         )
         yaml_uploader = gr.File(
             label="Upload Configuration YAML",
-            file_types=[".yaml", ".yml"],
-            scale=2
+            file_types=[".yaml", ".yml"]
         )
 
-
-    with gr.Tab("Document Ingestion"):
+    with gr.Tab("📄 Document Ingestion"):
         gr.Markdown(
             "Upload PDF/TXT files, select metadata, and choose an index to store them in."
         )
@@ -260,7 +340,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             outputs=[ingest_output],
         )
 
-    with gr.Tab("Chat with Data"):
+    with gr.Tab("💬 Chat with Data"):
         gr.Markdown(
             "Select an index and filters to chat with your data. Results will appear side-by-side."
         )
@@ -340,18 +420,99 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             ],
         )
 
+    with gr.Tab("🧪 Evaluation"):
+       
+    
+        gr.Markdown("""
+        ### Run Complete Evaluation
+        
+        This will:
+        1. Initial ingest synthetic test data (60 documents)
+        2. Run 15 predefined evaluation queries
+        3. Generate comprehensive reports (CSV, JSON, Markdown)
+        4. Compare Base RAG vs Hierarchical RAG
+        """)
+        
+        with gr.Row():
+            with gr.Column():
+                eval_collections = gr.CheckboxGroup(
+                    label="Select Collections to Evaluate",
+                    choices=INDEX_CHOICES,
+                    value=INDEX_CHOICES,
+                    info="Choose which collections to include in evaluation"
+                )
+                
+                eval_output_dir = gr.Textbox(
+                    label="Output Directory",
+                    value="reports",
+                    info="Directory where evaluation reports will be saved"
+                )
+                
+                with gr.Row():
+                    setup_data_btn = gr.Button(
+                        "📦 Setup Synthetic Test Data",
+                        variant="secondary"
+                    )
+                    run_eval_btn = gr.Button(
+                        "▶️ Run Full Evaluation",
+                        variant="primary"
+                    )
+            
+            with gr.Column():
+                eval_status = gr.Textbox(
+                    label="Status",
+                    lines=3,
+                    interactive=False
+                )
+                eval_summary_stats = gr.JSON(
+                    label="Summary Statistics",
+                    visible=True
+                )
+        
+        with gr.Row():
+            csv_download = gr.File(
+                label="📊 Download CSV Results",
+                visible=True
+            )
+            json_download = gr.File(
+                label="📋 Download JSON Results",
+                visible=True
+            )
+        
+        gr.Markdown("### 📄 Detailed Summary Report")
+        eval_summary_md = gr.Markdown(
+            value="*Run evaluation to see detailed results*",
+            line_breaks=True
+        )
+        
+        # Event handlers for batch evaluation
+        setup_data_btn.click(
+            fn=setup_synthetic_data,
+            inputs=[eval_collections],
+            outputs=[eval_status]
+        )
+        
+        run_eval_btn.click(
+            fn=run_evaluation_batch,
+            inputs=[eval_collections, eval_output_dir],
+            outputs=[
+                eval_status,
+                eval_summary_stats,
+                csv_download,
+                json_download,
+                eval_summary_md
+            ]
+        )
+    
     # --- Event Handlers ---
 
     # 1. When YAML is uploaded, store its content in config_state
-    #    .then() chain:
-    #    a) Update the Ingest dropdowns based on the default selected index
-    #    b) Update the Chat dropdowns based on the default selected index
     yaml_uploader.upload(
         fn=load_yaml_config,
         inputs=[yaml_uploader],
         outputs=[config_state]
     ).then(
-        fn=update_filters_for_index_ingest,
+        fn=update_metadata_for_index_ingest,
         inputs=[index_select_ingest, config_state],
         outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest]
     ).then(
@@ -360,9 +521,9 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
         outputs=[domain_select, section_select, topic_select]
     )
 
-    # 2. When the Ingest index changes, update its filters
+    # 2. When the Ingest index changes, update its metadata
     index_select_ingest.change(
-        fn=update_filters_for_index_ingest,
+        fn=update_metadata_for_index_ingest,
         inputs=[index_select_ingest, config_state],
         outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest]
     )
