@@ -13,10 +13,12 @@ model = ChatOpenAI(model="gpt-5-nano")
 
 def reranker(query: str, docs: List[Document]) -> List[Document]:
     print(f"Retrieved {len(docs)} documents")
+    if len(docs) <= 1:
+        return docs
     retriever = BM25Retriever.from_documents(docs)
-    result = retriever.invoke(query)
-    print("RERANKER Result: ", len(result), result[0])
-    return result
+    docs = retriever.invoke(query)
+    print("RERANKER Result: ", len(docs))
+    return docs
 
 
 def retrieval(

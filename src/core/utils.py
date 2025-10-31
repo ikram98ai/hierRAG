@@ -7,7 +7,7 @@ def mask_pii(text: str) -> str:
     text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', text)
     
     # Phone numbers
-    text = re.sub(r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b', '[PHONE]', text)
+    text = re.sub(r'\b(?:\d{3}[-.]?\d{4}|\d{3}[-.]?\d{3}[-.]?\d{4})\b', '[PHONE]', text)
     
     # Credit card numbers
     text = re.sub(r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b', '[CREDIT_CARD]', text)

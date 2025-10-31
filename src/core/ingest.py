@@ -1,4 +1,4 @@
-from langchain_community.document_loaders import PDFMinerLoader
+from langchain_community.document_loaders import PDFMinerLoader,TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
@@ -17,7 +17,10 @@ model = ChatOpenAI(model="gpt-5-nano")
 def ingest(file_paths: List[str], collection_name: str, metadata: MetaData):
     documents: list[Document] = []
     for file_path in file_paths:
-        docs = PDFMinerLoader(file_path).load()
+        if file_path.endswith(".txt"):
+            docs = TextLoader(file_path, encoding="utf-8").load()
+        elif file_path.endswith(".pdf"):
+            docs = PDFMinerLoader(file_path).load()
         documents.extend(docs)
         for doc in docs:
             doc.metadata["source"] = file_path.split("/")[-1]
@@ -39,7 +42,6 @@ def ingest(file_paths: List[str], collection_name: str, metadata: MetaData):
                 "doc_id": doc_id,
                 "chunk_id": str(uuid.uuid4()),
                 "source_name": chunk.metadata["source"],
-                "total_pages": chunk.metadata["total_pages"],
                 "start_index": chunk.metadata["start_index"],
                 **metadata.model_dump(),
             },

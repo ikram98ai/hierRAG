@@ -12,5 +12,5 @@ format:
 	uv run ruff format
 
 dev: 
-	uv run gradio app.py
+	uv run gradio src/app.py
 
