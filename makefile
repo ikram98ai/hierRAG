@@ -14,3 +14,5 @@ format:
 dev: 
 	uv run gradio src/app.py
 
+test: 
+	uv run pytest tests
