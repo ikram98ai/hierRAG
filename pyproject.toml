@@ -5,7 +5,7 @@ description = "Hierarchical Metadata RAG vs Standard RAG (Accuracy & Speed)"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "gradio>=5.49.1",
+    "gradio[mcp]>=5.49.1",
     "langchain[google-genai,openai]>=1.0.2",
     "langchain-community>=0.4.1",
     "langchain-milvus>=0.2.2",

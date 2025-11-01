@@ -23,7 +23,7 @@ class MetaData(BaseModel):
 model = ChatOpenAI(model="gpt-5-nano")
 emb_model = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=1536)
 
-MILVUS_URI = "./rag_task.db"
+MILVUS_URI = "./data/rag_task.db"
 
 
 def get_vectorstore(collection_name: str) -> Milvus:

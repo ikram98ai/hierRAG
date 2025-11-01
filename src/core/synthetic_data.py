@@ -15,180 +15,508 @@ class EvalQuery:
     description: str
 
 EVAL_QUERIES = [
-    # Hospital queries
+       # Hospital queries (3)
     EvalQuery(
-        query="What diagnostic imaging equipment is available?",
+        query="画像検査の結果が出るまでどのくらい時間がかかりますか？",
         collection="hospital",
-        language="en",
-        domain="Healthcare",
-        section="Patient Care",
-        topic="Diagnostics",
-        doc_type=None,
-        ground_truth_chunks=["MRI and CT scanning equipment", "radiology department"],
-        description="Specific diagnostic equipment query"
-    ),
-    EvalQuery(
-        query="How quickly can I get lab test results?",
-        collection="hospital",
-        language="en",
+        language="ja",
         domain="Healthcare",
         section="Patient Care",
         topic="Diagnostics",
         doc_type="faq",
-        ground_truth_chunks=["2-4 hours", "24 hours"],
-        description="FAQ about test turnaround time"
+        ground_truth_chunks=["2〜4時間", "24〜48時間", "単純なX線", "CTスキャンとMRI", "微生物培養"],
+        description="Diagnostic test turnaround times in Japanese"
     ),
     EvalQuery(
-        query="What happens in a cardiac emergency?",
+        query="HIPAAコンプライアンスのための必須トレーニングは何ですか？",
+        collection="hospital",
+        language="ja",
+        domain="Policy",
+        section="Administrative",
+        topic="Compliance",
+        doc_type="policy",
+        ground_truth_chunks=["年次トレーニング", "雇用後30日以内", "プライバシールール", "セキュリティ基準", "患者情報"],
+        description="HIPAA compliance training requirements in Japanese"
+    ),
+    EvalQuery(
+        query="救急部門でのトリアージプロセスはどのように機能しますか？",
+        collection="hospital",
+        language="ja",
+        domain="Healthcare",
+        section="Emergency",
+        topic="Treatment",
+        doc_type="policy",
+        ground_truth_chunks=["5分以内", "緊急度指数", "レベル1", "生命を脅かす", "バイタルサイン"],
+        description="Emergency department triage procedures in Japanese"
+    ),
+    
+    # Bank queries (4)
+    EvalQuery(
+        query="住宅ローンの金利は何によって決まりますか？",
+        collection="bank",
+        language="ja",
+        domain="Finance",
+        section="Loans",
+        topic="Interest Rates",
+        doc_type="policy",
+        ground_truth_chunks=["信用スコア", "頭金", "ローン期間", "6.5％から7.2％", "740以上"],
+        description="Mortgage rate determinants in Japanese"
+    ),
+    EvalQuery(
+        query="疑わしい活動報告はいつ必要ですか？",
+        collection="bank",
+        language="ja",
+        domain="Compliance",
+        section="Risk Management",
+        topic="Regulations",
+        doc_type="manual",
+        ground_truth_chunks=["SAR", "30日以内", "マネーロンダリング", "構造化", "10,000ドル"],
+        description="Suspicious Activity Report requirements in Japanese"
+    ),
+    EvalQuery(
+        query="デビットカードを紛失した場合はどうすればよいですか？",
+        collection="bank",
+        language="ja",
+        domain="Customer Service",
+        section="Accounts",
+        topic="Security",
+        doc_type="policy",
+        ground_truth_chunks=["1-800-BANK-HELP", "即座に無効化", "3〜5営業日", "交換カード", "詐欺請求"],
+        description="Lost debit card procedures in Japanese"
+    ),
+    EvalQuery(
+        query="個人ローンの金利範囲はどのくらいですか？",
+        collection="bank",
+        language="ja",
+        domain="Finance",
+        section="Loans",
+        topic="Interest Rates",
+        doc_type="manual",
+        ground_truth_chunks=["8.9％のAPR", "750以上", "11〜14％", "無担保借入", "信用力"],
+        description="Personal loan interest rate ranges in Japanese"
+    ),
+    
+    # Additional cross-domain queries (3)
+    EvalQuery(
+        query="従業員の健康スクリーニングには何が含まれますか？",
+        collection="hospital",
+        language="ja",
+        domain="HR",
+        section="Administrative",
+        topic="Compliance",
+        doc_type="manual",
+        ground_truth_chunks=["麻疹", "B型肝炎", "結核スクリーニング", "インフルエンザ予防接種", "雇用前健康評価"],
+        description="Employee health screening requirements in Japanese"
+    ),
+    EvalQuery(
+        query="KYC手続きではどのような情報が必要ですか？",
+        collection="bank",
+        language="ja",
+        domain="Compliance",
+        section="Risk Management",
+        topic="Regulations",
+        doc_type="manual",
+        ground_truth_chunks=["顧客確認", "政府発行の身分証明書", "社会保障番号", "生年月日", "住所"],
+        description="KYC verification information in Japanese"
+    ),
+    EvalQuery(
+        query="アカウントセキュリティのためにどのような多要素認証方法が利用できますか？",
+        collection="bank",
+        language="ja",
+        domain="Customer Service",
+        section="Accounts",
+        topic="Security",
+        doc_type="manual",
+        ground_truth_chunks=["ワンタイムコード", "生体認証", "セキュリティトークン", "パスワード", "電話番号"],
+        description="Multi-factor authentication methods in Japanese"
+    ),
+    EvalQuery(
+        query="外部空力解析にはどの乱流モデルが最適ですか？",
+        collection="fluid_simulation",
+        language="ja",
+        domain="Engineering",
+        section="CFD",
+        topic="Turbulence",
+        doc_type="faq",
+        ground_truth_chunks=["k-オメガSST", "外部空力", "デタッチドエディシミュレーション", "DES", "車両の抗力予測"],
+        description="Turbulence model selection for external aerodynamics in Japanese"
+    ),
+    EvalQuery(
+        query="適応メッシュ細分化のH-細分化とP-細分化の違いは何ですか？",
+        collection="fluid_simulation",
+        language="ja",
+        domain="Research",
+        section="Mesh Generation",
+        topic="Algorithms",
+        doc_type="manual",
+        ground_truth_chunks=["H-細分化", "より小さなものに細分化", "P-細分化", "多項式次数", "メッシュトポロジー"],
+        description="AMR refinement techniques comparison in Japanese"
+    ),
+    EvalQuery(
+        query="壁解像シミュレーションに推奨されるy+値はいくらですか？",
+        collection="fluid_simulation",
+        language="ja",
+        domain="Development",
+        section="CFD",
+        topic="Boundary Conditions",
+        doc_type="manual",
+        ground_truth_chunks=["y+", "約1", "粘性サブ層", "k-オメガSST", "低レイノルズ数"],
+        description="Wall resolution y+ requirements in Japanese"
+    ),
+    EvalQuery(
+        query="渦構造を可視化するための最も信頼できる方法は何ですか？",
+        collection="fluid_simulation",
+        language="ja",
+        domain="Engineering",
+        section="Visualization",
+        topic="Algorithms",
+        doc_type="faq",
+        ground_truth_chunks=["Q基準", "λ₂基準", "ガリレイ不変", "速度勾配テンソル", "等値面"],
+        description="Vortex visualization methods in Japanese"
+    ),
+    EvalQuery(
+        query="出版グレードのシミュレーションに必要なメッシュ品質基準は何ですか？",
+        collection="fluid_simulation",
+        language="ja",
+        domain="Research",
+        section="Mesh Generation",
+        topic="Algorithms",
+        doc_type="policy",
+        ground_truth_chunks=["0.85未満の歪度", "5:1未満のアスペクト比", "非圧縮性流れ", "3:1", "超音速流れ"],
+        description="Mesh quality standards for research publications in Japanese"
+    ),
+      # Hospital queries (5)
+    EvalQuery(
+        query="What imaging modalities are available and how long do results take?",
+        collection="hospital",
+        language="en",
+        domain="Healthcare",
+        section="Patient Care",
+        topic="Diagnostics",
+        doc_type="policy",
+        ground_truth_chunks=["3-Tesla MRI", "128-slice CT", "24-48 hours", "STAT readings", "2 hours"],
+        description="Comprehensive imaging capabilities and turnaround times"
+    ),
+    EvalQuery(
+        query="What happens during a stroke emergency at the hospital?",
         collection="hospital",
         language="en",
         domain="Healthcare",
         section="Emergency",
         topic="Treatment",
-        doc_type=None,
-        ground_truth_chunks=["door-to-balloon", "90 minutes", "cardiac"],
-        description="Emergency cardiac treatment protocol"
+        doc_type="manual",
+        ground_truth_chunks=["brain CT", "25 minutes", "thrombolytic therapy", "60 minutes", "NIH stroke scale"],
+        description="Stroke emergency protocol and timeline"
     ),
     EvalQuery(
-        query="What are the HIPAA compliance requirements?",
+        query="How is patient privacy protected under HIPAA?",
         collection="hospital",
         language="en",
         domain="Policy",
         section="Administrative",
         topic="Compliance",
-        doc_type="policy",
-        ground_truth_chunks=["HIPAA", "annual training", "patient information"],
-        description="HIPAA policy compliance"
+        doc_type="manual",
+        ground_truth_chunks=["role-based access controls", "audit trails", "encryption", "minimum necessary standard"],
+        description="HIPAA privacy safeguards and technical controls"
     ),
     EvalQuery(
-        query="What training is required for new hospital employees?",
+        query="What credentials must healthcare staff maintain?",
         collection="hospital",
         language="en",
         domain="HR",
         section="Administrative",
         topic="Compliance",
-        doc_type=None,
-        ground_truth_chunks=["mandatory training", "30 days", "infection control"],
-        description="Employee onboarding requirements"
+        doc_type="policy",
+        ground_truth_chunks=["primary source verification", "state licensing boards", "continuous monitoring", "board certification"],
+        description="Professional licensure verification requirements"
+    ),
+    EvalQuery(
+        query="What quality assurance programs does the radiology department have?",
+        collection="hospital",
+        language="en",
+        domain="Healthcare",
+        section="Patient Care",
+        topic="Diagnostics",
+        doc_type="policy",
+        ground_truth_chunks=["equipment performance", "radiation dose optimization", "MQSA accreditation", "ACR accreditation"],
+        description="Radiology quality and accreditation standards"
     ),
     
-    # Bank queries
+    # Bank queries (5)
     EvalQuery(
-        query="What are current mortgage interest rates?",
+        query="What are the differences between fixed and adjustable-rate mortgages?",
         collection="bank",
         language="en",
         domain="Finance",
         section="Loans",
         topic="Interest Rates",
-        doc_type=None,
-        ground_truth_chunks=["6.5% to 7.2%", "mortgage", "APR"],
-        description="Current mortgage rates"
+        doc_type="policy",
+        ground_truth_chunks=["payment stability", "unchanging interest rates", "5.5-6.0% APR", "rate caps", "adjustable-rate"],
+        description="Mortgage product comparison"
     ),
     EvalQuery(
-        query="How do I protect my bank account from fraud?",
-        collection="bank",
-        language="en",
-        domain="Compliance",
-        section="Accounts",
-        topic="Security",
-        doc_type="faq",
-        ground_truth_chunks=["two-factor authentication", "strong passwords", "monitor statements"],
-        description="Account security best practices"
-    ),
-    EvalQuery(
-        query="What documentation is needed for KYC verification?",
-        collection="bank",
-        language="en",
-        domain="Compliance",
-        section="Risk Management",
-        topic="Regulations",
-        doc_type="manual",
-        ground_truth_chunks=["KYC", "government-issued ID", "Social Security number"],
-        description="KYC documentation requirements"
-    ),
-    EvalQuery(
-        query="What should I do if my debit card is stolen?",
-        collection="bank",
-        language="en",
-        domain="Customer Service",
-        section="Accounts",
-        topic="Security",
-        doc_type=None,
-        ground_truth_chunks=["1-800-BANK-HELP", "deactivated instantly", "replacement"],
-        description="Lost card procedure"
-    ),
-    EvalQuery(
-        query="How are anti-money laundering rules enforced?",
+        query="What is a Suspicious Activity Report and when is it required?",
         collection="bank",
         language="en",
         domain="Compliance",
         section="Risk Management",
         topic="Regulations",
         doc_type="policy",
-        ground_truth_chunks=["AML", "Suspicious Activity Reports", "$10,000"],
-        description="AML compliance procedures"
+        ground_truth_chunks=["SAR", "30 days", "structuring deposits", "$10,000", "FinCEN"],
+        description="SAR filing requirements and procedures"
+    ),
+    EvalQuery(
+        query="How does the bank detect and prevent fraud in real-time?",
+        collection="bank",
+        language="en",
+        domain="Compliance",
+        section="Accounts",
+        topic="Security",
+        doc_type="policy",
+        ground_truth_chunks=["behavioral models", "machine learning", "geographic locations", "automatic protective measures", "immediate notifications"],
+        description="Real-time fraud detection systems"
+    ),
+    EvalQuery(
+        query="What verification is required for large wire transfers?",
+        collection="bank",
+        language="en",
+        domain="Compliance",
+        section="Accounts",
+        topic="Security",
+        doc_type="manual",
+        ground_truth_chunks=["$10,000", "enhanced verification", "verbal confirmation", "challenge questions", "callback verification"],
+        description="Wire transfer security procedures"
+    ),
+    EvalQuery(
+        query="What types of personal loans are available and what rates should I expect?",
+        collection="bank",
+        language="en",
+        domain="Finance",
+        section="Loans",
+        topic="Interest Rates",
+        doc_type="manual",
+        ground_truth_chunks=["unsecured borrowing", "8.9% APR", "excellent credit", "11-14% APR", "$5,000 minimum"],
+        description="Personal loan products and rate structure"
     ),
     
-    # Fluid simulation queries
+    # Fluid simulation queries (10)
     EvalQuery(
-        query="Which turbulence model is best for external aerodynamics?",
+        query="What are the advantages and disadvantages of the Reynolds Stress Model?",
         collection="fluid_simulation",
         language="en",
         domain="Engineering",
         section="CFD",
         topic="Turbulence",
-        doc_type="faq",
-        ground_truth_chunks=["k-omega SST", "external aerodynamics"],
-        description="Turbulence model selection"
+        doc_type="manual",
+        ground_truth_chunks=["RSM", "anisotropic turbulence", "streamline curvature", "50-100% more expensive", "numerical stability"],
+        description="RSM model characteristics and use cases"
     ),
     EvalQuery(
-        query="How does adaptive mesh refinement work?",
+        query="When should I use Detached Eddy Simulation instead of pure RANS or LES?",
+        collection="fluid_simulation",
+        language="en",
+        domain="Engineering",
+        section="CFD",
+        topic="Turbulence",
+        doc_type="manual",
+        ground_truth_chunks=["DES", "RANS within attached boundary layers", "LES in massively separated", "external aerodynamics", "vehicle drag"],
+        description="DES hybrid modeling approach"
+    ),
+    EvalQuery(
+        query="How does the Delaunay triangulation algorithm ensure mesh quality?",
         collection="fluid_simulation",
         language="en",
         domain="Research",
         section="Mesh Generation",
         topic="Algorithms",
-        doc_type=None,
-        ground_truth_chunks=["AMR", "solution gradients", "H-refinement"],
-        description="AMR algorithm explanation"
+        doc_type="manual",
+        ground_truth_chunks=["maximize the minimum angle", "circumcircle", "sliver elements", "Constrained Delaunay", "Laplacian smoothing"],
+        description="Delaunay algorithm quality metrics"
     ),
     EvalQuery(
-        query="What boundary conditions should I use at the inlet?",
+        query="What is anisotropic refinement and why is it beneficial?",
+        collection="fluid_simulation",
+        language="en",
+        domain="Research",
+        section="Mesh Generation",
+        topic="Algorithms",
+        doc_type="manual",
+        ground_truth_chunks=["stretches cells", "shock waves", "shear layers", "50-70%", "total cell count"],
+        description="Anisotropic AMR efficiency gains"
+    ),
+    EvalQuery(
+        query="What are the requirements for wall boundary conditions with k-omega SST?",
         collection="fluid_simulation",
         language="en",
         domain="Development",
         section="CFD",
         topic="Boundary Conditions",
-        doc_type="policy",
-        ground_truth_chunks=["velocity profile", "turbulence intensity", "inlet"],
-        description="Inlet BC specification"
+        doc_type="manual",
+        ground_truth_chunks=["viscous sublayer", "y+ to be approximately 1", "high aspect ratio", "low-Reynolds-number"],
+        description="Near-wall mesh resolution requirements"
     ),
     EvalQuery(
-        query="How can I visualize vortex structures?",
+        query="How do I properly set up a periodic boundary condition?",
+        collection="fluid_simulation",
+        language="en",
+        domain="Development",
+        section="CFD",
+        topic="Boundary Conditions",
+        doc_type="manual",
+        ground_truth_chunks=["repeating patterns", "translational and rotational", "topologically identical", "conformal", "fully developed flow"],
+        description="Periodic boundary condition setup"
+    ),
+    EvalQuery(
+        query="What is the Q-criterion and how is it used for vortex visualization?",
         collection="fluid_simulation",
         language="en",
         domain="Engineering",
         section="Visualization",
         topic="Algorithms",
         doc_type="faq",
-        ground_truth_chunks=["Q-criterion", "vortex cores", "streamlines"],
-        description="Vortex visualization techniques"
+        ground_truth_chunks=["Q-criterion", "Galilean-invariant", "velocity gradient tensor", "swirling motion", "positive Q-value"],
+        description="Vortex identification method"
     ),
     EvalQuery(
-        query="What is the recommended y+ value for wall-resolved simulations?",
+        query="How does the Marching Cubes algorithm work for isosurface extraction?",
         collection="fluid_simulation",
         language="en",
-        domain="Development",
-        section="CFD",
-        topic="Boundary Conditions",
+        domain="Engineering",
+        section="Visualization",
+        topic="Algorithms",
         doc_type="manual",
-        ground_truth_chunks=["y+ < 1", "k-omega SST", "wall"],
-        description="Wall resolution requirements"
+        ground_truth_chunks=["scalar fields", "constant", "3D grid cell-by-cell", "polygonal surface", "approximates the isosurface"],
+        description="Isosurface generation algorithm"
     ),
+    EvalQuery(
+        query="What is Line Integral Convolution and when should it be used?",
+        collection="fluid_simulation",
+        language="en",
+        domain="Engineering",
+        section="Visualization",
+        topic="Algorithms",
+        doc_type="manual",
+        ground_truth_chunks=["LIC", "texture-based", "two-dimensional vector fields", "blurring", "noise texture", "skin friction lines"],
+        description="LIC technique for surface flow visualization"
+    ),
+    EvalQuery(
+        query="What mesh quality requirements must be met for publication-grade simulations?",
+        collection="fluid_simulation",
+        language="en",
+        domain="Research",
+        section="Mesh Generation",
+        topic="Algorithms",
+        doc_type="policy",
+        ground_truth_chunks=["skewness below 0.85", "aspect ratio below 5:1", "incompressible flows", "3:1", "supersonic flows"],
+        description="Mesh quality standards for research"
+    ),
+  
 ]
 
 SYNTHETIC_DOCUMENTS = {
     "hospital": [
+        {
+            "content": "当院の画像診断部門では、最先端の医療機器を使用して正確な診断を提供しています。3テスラMRI装置、128列CTスキャナー、デジタルX線装置を完備し、高品質な画像検査を実施しています。検査の予約は電子カルテシステムを通じて行われ、主治医または医療提供者の承認が必要です。放射線科医が専門的なトレーニングを受けており、ACRガイドラインに従って画像を解釈します。通常の検査結果は24〜48時間以内に利用可能となりますが、緊急の場合は2時間以内に迅速な読影を提供します。すべての画像レポートは自動的に患者の電子医療記録にアップロードされ、依頼医師に通知が送信されます。造影剤アレルギーと腎機能は造影検査前に確認され、患者の安全を確保します。患者ポータルを通じて検査結果にアクセスできます。品質保証プログラムでは、装置の性能、放射線量の最適化、診断精度を監視しています。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Patient Care", "topic": "Diagnostics", "doc_type": "policy"},
+        },
+        {
+            "content": "臨床検査室では、24時間体制でCAP認定およびCLIA認証を取得した施設で血液検査と診断業務を行っています。毎日5,000件以上の検体を処理し、自動分析装置と特殊検査のための手動技術を使用しています。一般的なパネルには、全血球計算、総合代謝パネル、脂質プロファイル、甲状腺機能検査、凝固検査、ヘモグロビンA1C測定が含まれます。検体はバーコード技術で追跡され、誤認識を防ぎます。ほとんどの定期的な化学および血液学の結果は、検体受領後2〜4時間以内に利用可能です。微生物培養には、生物の成長特性に応じて24〜72時間が必要です。外部委託検査は通常3〜7日以内に結果が返されます。採血サービスは病院全体と複数の外来採取センターで運営されています。重要値は電子医療記録システムを通じて直ちに依頼医師に伝達され、確認が必要です。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Patient Care", "topic": "Diagnostics", "doc_type": "manual"},
+        },
+        {
+            "content": "ポイントオブケア検査は、患者のベッドサイド、救急部門、手術室で時間的に重要な臨床判断のための迅速な結果を提供します。承認された機器には、血液ガス分析装置、血糖測定器、凝固モニター、心筋マーカーアッセイ、妊娠検査が含まれます。すべてのポイントオブケア機器は定期的な品質管理検証を受け、中央検査室によって監視されます。オペレーターは年次能力評価を完了し、文書化されたトレーニングを通じて認定を維持します。結果は電子医療記録に直接インターフェースされ、転記エラーを排除します。血糖モニタリングプロトコルは、定義されたテスト頻度とインスリン調整アルゴリズムで糖尿病管理を導きます。動脈血液ガス分析は人工呼吸器管理と酸塩基障害治療に情報を提供します。トロポニン検査は胸痛評価を加速し、心筋梗塞診断を行います。検査室情報システムはすべてのポイントオブケア検査を追跡し、コンプライアンス監視と規制報告を行います。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Patient Care", "topic": "Diagnostics", "doc_type": "manual"},
+        },
+        {
+            "content": "質問：診断検査の結果が利用可能になるまでにどのくらいの時間がかかりますか？回答：ターンアラウンドタイムは検査の種類と臨床的緊急性によって異なります。全血球計算や基本代謝パネルを含むほとんどの定期的な検査室検査は、検体採取後2〜4時間以内に完了します。化学パネル、肝機能検査、脂質プロファイルも同様の時間枠に従います。画像検査は、モダリティと複雑さに基づいて異なるタイムラインがあります。単純なX線は通常、外来検査では2〜4時間以内、救急部門の患者では1時間以内に解釈されます。CTスキャンとMRI検査は、完全な放射線科医の解釈と正式な報告のために通常24〜48時間が必要です。ただし、緊急の臨床状況では予備的な読影がより早く利用可能になることがよくあります。超音波検査はスケジューリングに応じて当日の結果が得られる場合があります。微生物培養には、細菌の同定と感受性検査のために24〜72時間が必要です。入院患者のSTAT注文は優先処理を受け、結果は多くの場合1時間以内に利用可能です。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Patient Care", "topic": "Diagnostics", "doc_type": "faq"},
+        },
+        {
+            "content": "当院の画像診断サービスは、すべての医療専門分野にわたる正確な臨床意思決定を支援するための包括的な診断モダリティを網羅しています。部門は6台のMRI装置、4台のCTスキャナー、従来の放射線撮影スイート、超音波施設、核医学機能を運営しています。高度な画像技術には、心臓MRI、機能的脳イメージング、CTアンギオグラフィー、PET-CT融合検査が含まれます。スケジューリングの優先順位は臨床的緊急性ガイドラインに従い、緊急の場合は当日の利用可能性があります。画像アーカイブおよび通信システムは、シームレスな画像配信と以前の検査との比較を可能にします。フェローシップトレーニングを受けた放射線科医は、神経放射線学、筋骨格イメージング、心血管イメージング、体部イメージングにおいて専門的な解釈を提供します。ターンアラウンドタイムは継続的に監視され、定期的な外来検査では12時間、入院患者の画像検査では4時間のパフォーマンス目標があります。重要な所見は複数の通信チャネルを通じて即座に医師に通知されます。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Patient Care", "topic": "Diagnostics", "doc_type": "policy"},
+        },
+        {
+            "content": "放射線部門は最先端の画像技術を利用しており、3テスラMRIスキャナー、128スライスCTシステム、デジタルX線装置を含む正確な診断画像サービスを提供します。すべての画像リクエストは電子医療記録システムを通じて提出され、主治医または資格のある医療提供者からの承認が必要です。中央スケジューリングシステムは、機器の利用を最適化し、患者の待ち時間を最小限に抑えるために予約を調整します。標準プロトコルは、臨床適応に基づいて適切な画像モダリティの選択を確保します。専門トレーニングを受けた放射線科医がACRガイドラインに従って検査を解釈します。結果は通常、定期的な検査では24〜48時間以内に利用可能ですが、緊急の場合は迅速な解釈を受けます。STAT読影は救急部門の患者に対して2時間以内に提供されます。すべての画像レポートは患者の電子医療記録に自動的にアップロードされ、依頼医師への通知をトリガーします。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Patient Care", "topic": "Diagnostics", "doc_type": "policy"},
+        },
+
+        # Healthcare + Emergency + Treatment (6 documents)
+        {
+            "content": "救急治療プロトコルは、すべての患者の体系的な評価を確保する標準化されたABCDE評価方法論に準拠しています：気道の開通性と頸椎保護、呼吸の適切性と換気状態、出血制御を伴う循環、神経機能を含む障害評価、環境制御を伴う露出。トリアージ看護師は到着後5分以内にすべての入院患者を評価し、緊急度指数を使用して1（生命を脅かす）から5（緊急ではない）までの重症度レベルを割り当てます。レベル1の患者は、完全な外傷チーム活性化を伴う即座の蘇生室配置を受けます。救急部門は、小児患者、行動健康危機、感染症隔離のための別々の治療ゾーンを維持しています。心停止、重度の呼吸困難、大外傷、脳卒中、活動的な発作を含む生命を脅かす状態は、保険状況や支払能力に関係なく、EMTALA規制に従って即座の介入を受けます。高度な生命維持機能には、機械換気、緊急外科手術、集中治療監視が含まれます。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Emergency", "topic": "Treatment", "doc_type": "policy"},
+        },
+        {
+            "content": "救急部門はレベルIトラウマセンターとして運営され、心臓、神経、小児、外傷の緊急事態のための専門チームを備えた24時間体制で包括的な緊急および外傷ケアを提供します。迅速対応チームには、救急医、外傷外科医、麻酔科医、専門看護師、呼吸療法士、放射線技師が含まれ、活性化から5分以内に利用可能です。心臓緊急事態はアメリカ心臓協会のガイドラインに従い、ST上昇型心筋梗塞のドアツーバルーン時間は到着から経皮的冠動脈介入まで90分未満に維持されています。心臓カテーテル検査室は継続的に運営され、インターベンション心臓専門医がすぐに待機しています。脳卒中患者は脳CT画像が到着後25分以内に完了する即座の評価を受けます。血栓溶解療法は、NIH脳卒中スケール評価と除外基準の確認に従って、適応がある場合は60分以内に投与されます。包括的脳卒中センターの指定により、大血管閉塞に対する機械的血栓除去が可能になります。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Emergency", "topic": "Treatment", "doc_type": "manual"},
+        },
+        {
+            "content": "救急精神科サービスは、自殺念慮、精神病、重度のうつ病、不安発作、物質中毒、離脱症候群を含む急性行動健康危機に対処します。専用の精神科救急エリアは、連続監視を伴う結紮抵抗性の固定具を備えた安全な評価スペースを提供します。危機介入スペシャリストは、提示後1時間以内に包括的な評価を実施します。非自発的入院手続きは、患者が自己または他者に危険をもたらす場合、州のメンタルヘルス法に従います。物質使用障害に対する薬物支援治療は救急部門で開始され、外来プログラムへの紹介を調整するブリッジ処方箋があります。精神科コンサルテーションリエゾンサービスは、精神科入院の決定を必要とする複雑な症例に対して24時間365日利用可能です。緊張緩和技術は、物理的または化学的拘束の前に使用され、より制限の少ない介入が失敗した場合にのみ使用されます。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Emergency", "topic": "Treatment", "doc_type": "manual"},
+        },
+        {
+            "content": "小児救急プロトコルは、新生児から青年までの年齢層にわたる生理学、投薬量、機器のサイズの発達的変動を考慮しています。長さベースの蘇生テープは、重要な状況での迅速な体重推定と対応する薬物用量を提供します。Broslowシステムは、患者の長さと事前計算された投与量に一致する色分けされたゾーンを通じて投薬エラーを削減します。専門の小児機器には、適切なサイズの気道デバイス、静脈カテーテル、血圧カフ、モニタリングセンサーが含まれます。チャイルドライフスペシャリストは、気晴らし技術、治療的遊び、家族中心のケアアプローチを採用して、手順的不安と心理的外傷を最小限に抑えます。蘇生中の親の存在は、専用の家族リエゾンスタッフによってサポートされ、実行可能な場合に奨励されます。発熱評価は年齢別プロトコルに従い、敗血症リスクのために60日未満の乳児に対してより積極的な検査を行います。非偶発的外傷スクリーニングには、骨格調査、網膜検査、懸念を提起する損傷パターンの場合の社会サービス相談が含まれます。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Emergency", "topic": "Treatment", "doc_type": "policy"},
+        },
+        {
+            "content": "質問：救急室に到着したときに何が起こりますか？回答：到着すると、トリアージ看護師によって即座に評価され、血圧、心拍数、体温、呼吸数、酸素飽和度レベルを含むバイタルサインがチェックされます。トリアージ評価は通常5〜10分かかり、状態の重症度を決定します。この評価に基づいて、重症（レベル1）から緊急ではない（レベル5）までの5つの重症度レベルの1つに割り当てられます。胸痛、重度の出血、呼吸困難、意識の変化などの生命を脅かす状態を持つ重症患者は、遅延なく直接治療エリアに連れて行かれます。高重症度患者（レベル2）は非常に迅速に、通常15分以内に診察されます。中程度の重症度の症例（レベル3）は、部門のボリュームと患者の流れに応じて通常30〜60分待ちます。低重症度の状態は、忙しい期間中により長い待ち時間を経験する可能性がありますが、状態の変化についてすべての待機患者を継続的に再評価します。身分証明書、保険情報、病歴の提供を求められますが、緊急の状況では治療が管理プロセスのために遅延されることはありません。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Emergency", "topic": "Treatment", "doc_type": "faq"},
+        },
+        {
+            "content": "外傷活性化は、重傷を持つ患者のための多分野チームを動員し、外科医、麻酔科医、看護師、呼吸療法士、放射線技師を含みます。大量輸血プロトコルは、出血性ショックのための迅速な血液製剤の利用可能性を確保します。部門には、高度なモニタリング、ポイントオブケア検査室検査、超音波機能、緊急手順機器を備えた専用の蘇生ベイが含まれています。小児救急ケアは、年齢に適した機器のサイジングとチャイルドライフスペシャリストを特徴とし、手順中の患者の苦痛を最小限に抑えます。トリアージプロセスは5分以内にすべての患者を評価し、緊急度指数を使用して1から5までの重症度を割り当てます。レベル1の患者は完全な外傷チーム活性化を伴う即座の蘇生室配置を受けます。品質改善は治療時間、患者の転帰、満足度スコアを監視します。部門ポリシーは、アメリカ救急医学会のガイドラインと共同委員会の基準に準拠しています。スタッフは、高度心臓生命維持、小児高度生命維持、高度外傷生命維持の認定を維持します。",
+            "metadata": {"language": "ja", "domain": "Healthcare", "section": "Emergency", "topic": "Treatment", "doc_type": "manual"},
+        },
+
+        # Policy + Administrative + Compliance (6 documents)
+        {
+            "content": "HIPAA準拠要件は、雇用状態や役割に関係なく、保護された健康情報を扱うすべての医療従事者に対する包括的なトレーニングを義務付けています。年次トレーニングモジュールは、プライバシールール、セキュリティ基準、違反通知要件、患者の権利、執行罰則をカバーしています。医師、看護師、管理職員、環境サービス、請負業者を含むすべてのスタッフメンバーは、雇用後30日以内に認定を完了し、毎年再認定する必要があります。トレーニング内容は、適切な情報アクセス、最小限必要基準、患者の承認要件、治療、支払い、運営のための許可された開示について扱います。患者情報の議論は、エレベーター、カフェテリア、廊下、待合室を含む公共エリアで厳しく禁止されており、そこでは権限のない個人が立ち聞きする可能性があります。電子医療記録は役割ベースのアクセス制御を実装し、情報の可視性を職務に関連するデータのみに制限します。すべてのシステムアクセスは、ユーザーID、タイムスタンプ、アクセスされたレコード、実行されたアクションを記録する自動監査証跡でログされます。",
+            "metadata": {"language": "ja", "domain": "Policy", "section": "Administrative", "topic": "Compliance", "doc_type": "policy"},
+        },
+        {
+            "content": "組織のコンプライアンスプログラムは、HIPAA、スタークロー、反キックバック法、虚偽請求法、州固有の要件を含む医療規制の遵守を確保する説明責任の枠組み、監視システム、是正措置プロセスを確立します。最高コンプライアンス責任者は取締役会に直接報告し、運営上の圧力からの独立性を維持します。コンプライアンス委員会は毎月会議を開き、監査結果をレビューし、報告された懸念を調査し、ポリシーの更新を推奨します。ホットライン報告メカニズムは、報復の恐れなしに潜在的な違反の匿名提出を可能にします。すべての報告は迅速な調査を受け、調査結果が文書化され、適切な是正措置が実施されます。リスク評価は、請求慣行、医師との取り決め、医療必要性の決定、研究活動などの脆弱性の高い領域を特定し、強化された監視が必要です。定期的な監査は、医療記録の文書化、コーディングの正確性、請求の提出、プライバシー慣行を検査します。コンプライアンス部門は、電子医療記録アクセスログの四半期ごとのレビューを実施し、不適切な情報表示のパターンを分析します。",
+            "metadata": {"language": "ja", "domain": "Policy", "section": "Administrative", "topic": "Compliance", "doc_type": "manual"},
+        },
+        {
+            "content": "HIPAAの下での患者の権利には、個人の健康情報へのアクセス、医療記録の修正要求、開示の会計処理の受領、機密通信の要求、プライバシー違反に関する苦情の提出が含まれます。患者は要求後30日以内に医療記録を検査および取得することができますが、心理療法ノートや法的手続きのために編集された情報には特定の例外が適用されます。組織は、実行可能な場合、患者の好みに合わせて電子形式で記録を提供します。修正要求は、正確性の懸念に基づいて修正が適切かどうかを決定する医療記録委員会によってレビューを受けます。組織は修正を拒否することができますが、患者は記録に不一致の声明を含める権利を保持します。開示の会計処理は、通常の治療、支払い、医療運営活動以外のすべての健康情報のリリースを文書化します。患者は、異なる電話番号や郵送先住所などの代替手段による通信を要求し、機密性を保護することができます。プライバシー苦情プロセスは、60日以内に応答を提供して懸念の調査を確保します。",
+            "metadata": {"language": "ja", "domain": "Policy", "section": "Administrative", "topic": "Compliance", "doc_type": "manual"},
+        },
+        {
+            "content": "情報セキュリティポリシーは、HIPAA セキュリティルール要件を満たす管理的、物理的、技術的保護措置を通じて電子保護健康情報を保護します。管理制御には、労働力セキュリティトレーニング、アクセス管理手順、セキュリティインシデント対応計画、緊急事態の緊急時計画が含まれます。物理的保護措置は、バッジリーダー、監視システム、訪問者管理プロトコルを通じて施設へのアクセスを制限します。ワークステーションのセキュリティポリシーは、スクリーンセーバーの活性化、ショルダーサーフィンを防ぐためのデバイスの配置、患者情報を含む印刷物の適切な廃棄を義務付けています。技術的保護措置は、90日ごとに変更される複雑なパスワードを必要とする一意のユーザー認証を実装します。多要素認証は、パスワード、セキュリティトークン、または生体認証の組み合わせを使用したリモートアクセスに必須です。暗号化は、TLSプロトコルを使用したネットワーク全体のデータ送信を保護し、サーバー、ワークステーション、ポータブルデバイスに保存されたデータを暗号化します。自動ログオフは15分間の非アクティブ後にアイドルセッションを終了します。",
+            "metadata": {"language": "ja", "domain": "Policy", "section": "Administrative", "topic": "Compliance", "doc_type": "policy"},
+        },
+        {
+            "content": "質問：HIPAAとは何ですか、なぜそれが患者と医療提供者にとって重要なのですか？回答：医療保険の携行性と責任に関する法律（HIPAA）は、1996年に制定された連邦法であり、機密性の高い患者の健康情報を無許可の開示から保護するための全国基準を確立しています。プライバシールールは、医療記録、請求情報、その他の識別可能な健康データに対する法的保護を作成し、誰がこの情報にアクセスできるか、どのような状況下でアクセスできるかを制限します。セキュリティルールは、電子医療情報を具体的に扱い、医療組織に無許可のアクセス、使用、または開示から保護するための保護措置を実装することを要求します。HIPAAは、あなたに健康情報に対する制御を与え、医療記録へのアクセス、修正の要求、プライバシー慣行の通知を受ける権利を確立するため重要です。医療提供者にとって、コンプライアンスは数百万ドルに達する罰金や故意の違反に対する刑事訴追の可能性を含む法的罰則を防ぎます。法律は、あなたの機密性の高い医療情報が機密のままであり、明示的な承認なしに雇用主、家族、または他の当事者と共有できないことを保証します。",
+            "metadata": {"language": "ja", "domain": "Policy", "section": "Administrative", "topic": "Compliance", "doc_type": "faq"},
+        },
+        {
+            "content": "データ侵害対応計画は、保護された健康情報への無許可アクセス、使用、または開示が発生した場合の手順を詳述します。侵害の発見後、コンプライアンスオフィスは直ちに調査を開始し、影響の範囲、危害のリスク、影響を受けた個人の数を決定します。500人以上の個人に影響を与える侵害は、発見後60日以内に保健福祉省に報告し、影響を受けた個人に通知し、著名なメディアアウトレットで公表する必要があります。500人未満の侵害は年次報告され、影響を受けた個人への通知が必要です。通知には、侵害の説明、関与した情報の種類、推奨される保護ステップ、組織が取った是正措置、連絡先情報が含まれます。フォレンジック分析が侵害の原因を決定し、将来の発生を防ぐためのセキュリティ強化を導きます。影響を受けた個人にはクレジット監視サービスが提供される場合があります。",
+            "metadata": {"language": "ja", "domain": "Policy", "section": "Administrative", "topic": "Compliance", "doc_type": "manual"},
+        },
+
+        # HR + Administrative + Compliance (6 documents)
+        {
+            "content": "すべての医療従業員は、安全で準拠した医療提供に必要な基本的な能力をカバーする雇用後30日以内に包括的な必須トレーニングを完了する必要があります。必須モジュールには、手指衛生、個人用保護具、血液媒介病原体曝露、隔離予防措置をカバーする感染管理と予防が含まれます。職場の安全トレーニングは、身体力学、患者取り扱い機器、危険物管理、火災安全、緊急対応手順に対処します。HIPAAプライバシーおよびセキュリティトレーニングは、患者情報を保護し、違反の結果を確立する責任を設定します。ハラスメント防止教育は、禁止された行為の定義、報告メカニズム、調査プロセス、尊重ある職場環境への組織のコミットメントをカバーしています。追加の役割固有のトレーニングには、職務責任に応じて、投薬管理、拘束使用、危機介入、または機器操作が含まれる場合があります。学習管理システムは完了を追跡し、期限切れの要件について自動リマインダーと上司通知を行います。規定の時間枠内に必須トレーニングを完了しないと、口頭警告から始まり、書面による警告に進み、潜在的に臨床特権の停止または雇用終了につながる段階的な懲戒処分が行われます。",
+            "metadata": {"language": "ja", "domain": "HR", "section": "Administrative", "topic": "Compliance", "doc_type": "policy"},
+        },
+        {
+            "content": "年次業績評価プロセスは、すべての従業員に対して構造化されたフィードバック、専門能力開発計画、報酬レビューを提供します。評価は毎年1月に、確立された能力、生産性指標、行動期待に対する職務遂行を測定する標準化された評価ツールを使用して実施されます。直属の上司は、年間を通じて観察された業績、ピアフィードバック、患者満足度スコア、品質指標に基づいて書面による評価を準備します。従業員は、達成、課題、開発目標を反映した自己評価を完了します。評価会議は、強み、改善領域、キャリア志向を議論する双方向の対話の機会を提供します。臨床スタッフは、直接観察、テスト、またはチャートレビューを通じて基本的なスキルの熟練度を検証する能力評価を受けます。継続教育要件は専門職によって異なり、看護師は州委員会規制に従って接触時間が必要であり、医師は専門委員会認定を維持します。専門能力開発計画は、学習目標、教育リソース、メンターシップの機会、目標達成のタイムラインを特定します。ライセンスの更新と専門資格は常に最新の状態を維持する必要があり、有効期限は人事部によって追跡されます。",
+            "metadata": {"language": "ja", "domain": "HR", "section": "Administrative", "topic": "Compliance", "doc_type": "manual"},
+        },
+        {
+            "content": "専門免許および認定検証プロセスは、すべての臨床実践者が実践範囲内で承認する現行の資格を維持することを保証します。人事部は雇用前に免許、認定、教育資格の一次情報源検証を実施し、雇用期間中継続的に更新状態を監視します。自動監視システムは州の免許委員会と全国データベースに問い合わせ、懲戒処分、実践制限、または資格の有効期限を検出します。医師は、医療教育、研修、委員会認定、医療過誤履歴、他の施設での病院特権を検証する医療スタッフサービスを通じてクレデンシャリングを受けます。ナースプラクショナーや医師アシスタントを含む高度実践提供者は、協力的実践契約、処方権限の検証、全国認定の検証が必要です。登録看護師、呼吸療法士、理学療法士、その他の免許を持つ専門家は、実践場所に固有の州免許を維持する必要があります。認定要件は役割によって異なり、集中治療、救急看護、周術期看護、またはその他の領域の専門認定が特定の職位に必要です。継続教育文書は、免許更新要件を満たすために完了した学習活動を実証します。",
+            "metadata": {"language": "ja", "domain": "HR", "section": "Administrative", "topic": "Compliance", "doc_type": "policy"},
+        },
+        {
+            "content": "従業員健康サービスは、健康スクリーニング、予防接種プログラム、傷害管理、曝露プロトコルを通じて労働力の健康を促進し、職業性疾患を予防します。雇用前健康評価は、麻疹、おたふく風邪、風疹、水痘、B型肝炎、季節性インフルエンザの免疫状態を確認します。結核スクリーニングは、インターフェロンγ遊離アッセイまたはツベルクリン皮膚検査を通じて行われ、陽性結果の場合は胸部X線撮影が行われます。年次インフルエンザ予防接種は、医学的または宗教的免除を伴う代替感染制御措置を必要とするすべての医療従事者に必須です。血液または体液への職業的曝露は、CDCガイドラインに従った即座の報告と曝露後予防プロトコルをトリガーします。針刺し傷害は、供給源患者の検査、ベースライン従業員の血液検査、HIVまたは肝炎予防の必要性を決定するリスク評価を必要とします。職場での怪我は、適切な場合、医療治療、作業制限、労働者災害補償処理で迅速に評価されます。職務適性評価は、米国障害者法の要件の下で宿泊オプションが検討されて、病気または怪我の後に本質的な職務機能を実行する能力を評価します。",
+            "metadata": {"language": "ja", "domain": "HR", "section": "Administrative", "topic": "Compliance", "doc_type": "manual"},
+        },
+        {
+            "content": "質問：従業員トレーニングセッションは年間を通じていつ、どこで開催されますか？回答：新入社員オリエンテーションは毎週月曜日の午前8時から教育センターで開始され、午後4時まで続き、組織のポリシー、コンプライアンス要件、安全手順、福利厚生登録をカバーします。すべてのスタッフに対する必須の年次トレーニングは、対面とオンライン学習プラットフォームの両方で提供され、日中、夕方、週末のオプションを含むさまざまなスケジュールに対応するために各月に複数のセッション時間があります。オンラインモジュールは24時間365日アクセス可能で、必要な時間枠内でいつでも便利に完了できます。対面セッションは、従業員イントラネットのトレーニングカレンダーに公開された日付で、メインオーディトリアムで毎月スケジュールされています。基礎生命支援、高度心臓生命維持、または小児高度生命維持などのトピックの専門トレーニングは、承認されたインストラクターを通じて隔月で行われ、実践的なスキル練習と認定テストが含まれます。部門固有のトレーニングは、ユニットのニーズに基づいて個々のマネージャーによって手配され、機器の操作、新しい手順の実装、または品質改善イニシアチブが含まれる場合があります。",
+            "metadata": {"language": "ja", "domain": "HR", "section": "Administrative", "topic": "Compliance", "doc_type": "faq"},
+        },
+        {
+            "content": "パフォーマンス改善計画は、欠陥が構造化された介入を必要とする場合に実装され、具体的な期待、サポートリソース、フォローアップ評価のタイムラインがあります。計画は、測定可能な目標、達成のための明確なタイムライン、定期的なチェックインミーティング、進捗を監視するためのドキュメントを含みます。上司は指導、メンターシップ、追加のトレーニングリソース、パフォーマンス障壁に対処するための作業調整を提供します。改善が実証された場合、従業員は監視期間なしで通常の状態に戻ります。計画期間中に十分な進捗が見られない場合、懲戒処分は停職または雇用終了にエスカレートする可能性があります。すべてのパフォーマンス問題、介入、結果は従業員ファイルに文書化され、公正な扱いと法的保護を確保します。人事部は、一貫したポリシーの適用を確保し、差別または不当な扱いの主張を防ぐために、すべてのパフォーマンス改善計画をレビューします。従業員は計画を認識し、期待を理解していることを確認するために署名する機会があります。",
+            "metadata": {"language": "ja", "domain": "HR", "section": "Administrative", "topic": "Compliance", "doc_type": "manual"},
+        },
         # Healthcare + Patient Care + Diagnostics (5 examples)
         {
             "content": "The radiology department utilizes state-of-the-art imaging technology including 3-Tesla MRI scanners, 128-slice CT systems, and digital X-ray equipment to provide accurate diagnostic imaging services. All imaging requests must be submitted through the electronic health record system and require approval from the attending physician or qualified healthcare provider. The central scheduling system coordinates appointments to optimize equipment utilization and minimize patient wait times. Standard protocols ensure appropriate imaging modality selection based on clinical indications. Radiologists with subspecialty training interpret studies according to ACR guidelines. Results are typically available within 24-48 hours for routine studies, though urgent cases receive expedited interpretation. STAT readings are provided within 2 hours for emergency department patients. All imaging reports are automatically uploaded to the patient's electronic medical record and trigger notifications to ordering physicians. Quality assurance programs monitor equipment performance, radiation dose optimization, and diagnostic accuracy. The department maintains MQSA accreditation for mammography and ACR accreditation for all modalities. Patients receive detailed preparation instructions and can access their imaging results through the patient portal. Contrast allergies and renal function are verified before contrast-enhanced studies to ensure patient safety.",
@@ -279,6 +607,88 @@ SYNTHETIC_DOCUMENTS = {
     ],
     
     "bank": [
+        # Finance + Loans + Interest Rates (6 documents)
+        {
+            "content": "現在の住宅ローン金利は、信用スコア、頭金の割合、ローン期間、物件タイプ、ローン対価値比率を含む複数の要因に基づいて大きく異なります。740以上の優れた信用スコアを持つ資格の高い借り手に対する従来の30年固定金利住宅ローンの金利は、現在6.5％から7.2％のAPRの範囲です。680から739の間の信用スコアを持つ借り手は通常、0.25〜0.5％高い金利を見ますが、680未満の借り手は8％を超える金利に直面するか、資格を得るのが困難になる可能性があります。固定金利住宅ローンは、ローン期間全体を通じて変わらない金利で支払いの安定性を提供し、借り手を将来の金利上昇から保護しますが、調整可能金利の代替品と比較して最初により高いコストがかかる可能性があります。変動金利住宅ローン（ARM）は、通常、固定金利住宅ローンより0.5〜1.0％低い導入金利を提供し、約5.5〜6.0％のAPRから始まりますが、5年、7年、または10年の初期固定期間後、市場インデックスの動きと事前に決定されたマージンに基づいて調整されます。金利キャップは年次および生涯の調整を制限し、劇的な支払い増加に対するある程度の保護を提供します。",
+            "metadata": {"language": "ja", "domain": "Finance", "section": "Loans", "topic": "Interest Rates", "doc_type": "policy"},
+        },
+        {
+            "content": "ホームエクイティラインオブクレジットは、信用力とローン対価値比率によって決定されるプライムレートにマージンを加えた変動金利で、物件エクイティによって担保された柔軟な借入オプションを提供します。現在のHELOC金利は、信用プロファイルとエクイティポジションに応じて7.5％から9.5％のAPRの範囲です。引き出し期間は通常10年続き、未払い残高に対して利息のみの支払いが必要で、クレジット制限まで借入が可能です。引き出し期間が終了した後、返済期間が始まり、残りの10〜20年にわたって元本と利息の支払いが必要です。ホームエクイティローンは、固定金利と固定月額支払いでローン期間全体を通じて一括払いを提供することでHELOCとは異なります。これらの金利は現在、5年から30年の期間で7.0％から8.5％のAPRの範囲です。両方のホームエクイティ製品は、ローン後に少なくとも15〜20％が残る十分なエクイティを必要とします。鑑定は利用可能なエクイティを決定する物件価値を検証します。利息の税控除は資金の使用に依存し、収益が住宅改善の資金調達に使用される場合、一般的に控除が許可されますが、現行の税法の下で債務整理または他の目的には許可されません。",
+            "metadata": {"language": "ja", "domain": "Finance", "section": "Loans", "topic": "Interest Rates", "doc_type": "policy"},
+        },
+        {
+            "content": "個人ローン製品は、債務整理、大規模購入、住宅改善、医療費、またはその他の個人的なニーズに対して、担保を必要としない無担保借入オプションを提供します。金利は主に信用力、収入の安定性、債務対収入比率、ローン期間の長さによって決定されます。750以上の優れた信用スコアを持つ借り手は8.9％のAPRから始まる最も競争力のある金利の資格があり、良好な信用（680〜749）を持つ借り手は通常11〜14％のAPRの間の金利を見ます。公正な信用の借り手（620〜679）は18％のAPRを超える金利に直面する可能性があり、信用スコアが低いとローンの拒否または代替貸付製品への紹介が発生します。ローン金額は最低5,000ドルから資格のある借り手に対して最大50,000ドルの範囲ですが、一般的な承認は収入検証と既存の債務義務に基づいて10,000ドルから35,000ドルの間です。ローン期間は2年から7年まで変動し、短期間はより低い金利を持ちますがより高い月額支払いがあり、長期間は支払い額を削減しますが総利息コストを増加させます。",
+            "metadata": {"language": "ja", "domain": "Finance", "section": "Loans", "topic": "Interest Rates", "doc_type": "manual"},
+        },
+        {
+            "content": "自動車ローン融資は、車両の年式、ローン期間、頭金、信用スコア、貸し手との関係に基づいて金利が変動する新車および中古車の購入に利用できます。新車ローンは現在、信用力に応じて5.5％から9.0％のAPRの範囲であり、中古車ローンは古い車両に関連する追加のリスクを反映して6.5％から11.0％のAPRとわずかに高い金利を持ちます。ローン期間は通常36ヶ月から84ヶ月の範囲ですが、ファイナンシャルアドバイザーは一般的に、減価償却が元本削減を上回るため、車両の価値よりも多くを負うことを避けるために短期間を推奨しています。長期間は月額支払いを削減しますが、ローンの寿命にわたって総利息コストを大幅に増加させます。新車の場合は少なくとも20％、中古車の場合は10％の頭金が推奨され、即座に正のエクイティを確立し、潜在的により良い金利の資格を得ます。信用組合は、良好な状態にあるメンバーに対して従来の銀行より0.5〜1.0％低い金利を提供することがよくあります。ディーラーファイナンスは、選択された新しいモデルで限られた期間、0％のAPRと同じくらい低いプロモーション金利を提供する場合がありますが、これらのオファーは通常、優れた信用を必要とし、購入価格の交渉を制限する場合があります。",
+            "metadata": {"language": "ja", "domain": "Finance", "section": "Loans", "topic": "Interest Rates", "doc_type": "manual"},
+        },
+        {
+            "content": "質問：ローン金利はどのように計算され、私が受け取る金利に影響を与える要因は何ですか？回答：ローン金利は、完全かつタイムリーな返済の可能性を評価するのに役立つ複数のリスク要因を考慮した複雑な評価プロセスを通じて決定されます。出発点は通常、多くの消費者ローンのプライムレート、または住宅ローンの現在の財務省利回りであり、一般的な市場状況と連邦準備制度の金融政策を反映しています。その後、貸し手はあなたの個々の信用プロファイルに基づいてマージンを追加します。あなたの信用スコアは最も重要な単一の要因であり、760以上のスコアは最高の金利の資格がある一方、620未満のスコアは大幅に高い金利または可能な拒否に直面します。信用履歴の長さ、支払い履歴、信用利用率、最近の信用照会はすべてこの評価に寄与します。ローン対価値比率は、住宅ローンや自動車ローンなどの担保付きローンに大きく関係し、より大きな頭金は貸し手のリスクを削減し、多くの場合より良い金利の資格を得ます。債務対収入比率はあなたの追加の支払いを処理する能力を測定し、ほとんどの貸し手によって36％未満の低い比率が好まれます。",
+            "metadata": {"language": "ja", "domain": "Finance", "section": "Loans", "topic": "Interest Rates", "doc_type": "faq"},
+        },
+        {
+            "content": "住宅ローンの借り換えは、金利が大幅に低下した場合、または元の購入後に信用スコアが大幅に改善された場合に魅力的になります。借り換えプロセスには、新しいローン申請、信用チェック、収入検証、物件鑑定、決済費用が含まれます。決算費用は通常、ローン金額の2〜5％の範囲であり、借り換えによって節約される月額支払いによって回収されるまでの損益分岐点の計算が必要です。金利が少なくとも0.75〜1.0％低下した場合、借り換えは一般的に経済的に理にかなっていますが、住宅に留まる予定の期間も考慮する必要があります。キャッシュアウト借り換えは、蓄積されたエクイティにアクセスすることを可能にし、住宅改善、債務整理、または他の財務目標のための資金を提供しますが、通常わずかに高い金利を持ち、ローン残高を増加させます。ストリームライン借り換えプログラムは、FHAおよびVAローンに対して利用可能であり、鑑定要件を削減または排除し、文書要件を簡素化して、プロセスをより速く、より安価にします。",
+            "metadata": {"language": "ja", "domain": "Finance", "section": "Loans", "topic": "Interest Rates", "doc_type": "manual"},
+        },
+
+        # Compliance + Risk Management + Regulations (6 documents)
+        {
+            "content": "マネーロンダリング防止コンプライアンスプログラムは、マネーロンダリング、テロ資金供与、制裁違反、その他の不正な活動を含む金融犯罪を検出および防止する包括的な管理を実装します。銀行秘密法と米国愛国者法は、金融機関に顧客デューデリジェンス、継続的な監視、疑わしい活動報告、記録保持を組み込んだ堅牢なAMLプログラムを確立することを要求しています。顧客識別プログラムは、政府発行の身分証明書を通じてすべての新規口座保有者の身元を確認し、情報は権威あるデータベースに対して検証されます。実益所有権規則は、法人口座の25％以上を所有する個人の開示を要求し、匿名のシェル会社が不正な資金源を隠すことを防ぎます。強化されたデューデリジェンスは、非居住外国人、政治的に重要な人物、マネーサービスやカジノなどの高リスク業界のビジネス、弱いAML管理を持つ管轄区域の顧客を含む高リスクの顧客に適用されます。取引監視システムは活動パターンを分析し、報告しきい値未満での預金の構造化、資金の急速な移動、述べられた事業目的と一致しない取引、または高リスク国を含む活動などの異常な行動にフラグを立てます。",
+            "metadata": {"language": "ja", "domain": "Compliance", "section": "Risk Management", "topic": "Regulations", "doc_type": "policy"},
+        },
+        {
+            "content": "顧客確認手続きは、顧客の身元、事業活動、資金源、予想される取引パターンの徹底的な理解を確保するデューデリジェンスフレームワークを確立し、効果的なリスク評価と疑わしい活動の検出を可能にします。最初の顧客確認には、完全な法的名前、生年月日、住所、社会保障番号や納税者識別番号などの政府識別番号を含む識別情報の収集と検証が必要です。身分証明書は、データベース比較、文書機能検証、ますます洗練された生体認証マッチング技術を含む複数の方法を通じて認証されます。顧客リスク評価は、職業、収入源、取引量、地理的位置、製品タイプなどの要因に基づいて口座を分類します。高リスク指定は、強化された監視と定期的なレビュー要件をトリガーします。ビジネスアカウントは、設立文書、事業ライセンス、所有構造、承認された署名者指定を含む追加の文書を必要とします。富の源泉と資金の源泉の照会は、お金が正当な活動から来ることを確保し、取引サイズとリスクレベルに合わせて拡大された合理的な文書の期待があります。",
+            "metadata": {"language": "ja", "domain": "Compliance", "section": "Risk Management", "topic": "Regulations", "doc_type": "manual"},
+        },
+        {
+            "content": "制裁コンプライアンスプログラムは、外国資産管理局によって管理される経済制裁の対象となる個人、団体、国との禁止された取引を防ぎます。OFACは、特別指定国民、ブロックされた人物、セクター制裁、イラン、北朝鮮、シリアなどの国を対象とした国ベースのプログラム、および地政学的発展に対応するさまざまな地域固有の制裁を含む複数の制裁リストを維持しています。すべての顧客名、取引当事者、住所は、口座開設時と取引処理時の両方でOFACリストに対して自動スクリーニングを受けます。阻止システムは禁止された取引を自動的にブロックし、制裁違反を防ぎます。潜在的な一致はコンプライアンススペシャリストによる手動レビューをトリガーし、見かけの一致が真の陽性であるか、名前の類似性によって引き起こされた偽陽性であるかを判断します。偽陽性率は、包括的なスクリーニングと運営効率のバランスをとる最適化を通じて管理されます。顧客スクリーニングは、オンボーディング時だけでなく、制裁リストが週に複数回更新されるときに継続的に行われます。遡及的スクリーニングは、リストが更新されるたびに既存の顧客と過去の取引をレビューし、以前に検出されなかった一致を特定して調査と可能な遡及的報告を必要とします。",
+            "metadata": {"language": "ja", "domain": "Compliance", "section": "Risk Management", "topic": "Regulations", "doc_type": "policy"},
+        },
+        {
+            "content": "消費者保護規制は、連邦および州の多数の法律を通じて公正な扱い、透明な開示、銀行顧客に対する適切な救済を確保します。貸付真実法は、年率、金融費用、支払いスケジュール、総コストを含む信用条件の明確な開示を要求し、情報に基づいた借入決定を可能にします。貯蓄真実法は、預金口座の金利、手数料、条件の開示を義務付け、比較ショッピングを容易にする標準化された年率収益計算を行います。電子資金移動法は、ATM取引、デビットカード、自動支払いを含む電子銀行の消費者の権利と機関の責任を確立します。エラー解決手順は、指定された時間枠内での調査を要求し、解決保留中に暫定的なクレジットを提供します。無許可の取引責任は、2営業日以内に報告された場合は50ドルに制限され、60日以内に報告された場合は500ドルに増加し、明細書で60日以内に無許可の活動を報告しない場合のみ無制限の責任があります。規制Eは、賃金の電子支払いを要求することを禁止し、ATMおよびデビットカード取引をカバーする当座貸越プログラムのオプトイン要件を確立します。",
+            "metadata": {"language": "ja", "domain": "Compliance", "section": "Risk Management", "topic": "Regulations", "doc_type": "manual"},
+        },
+        {
+            "content": "質問：なぜ銀行は口座を開設したりローンを申請したりするときに多くの文書を要求するのですか？回答：金融機関は、顧客と金融システムの両方を保護する複数の重要な理由のために、連邦規制によって広範な文書を収集することを法的に要求されています。銀行秘密法と米国愛国者法は、銀行がマネーロンダリング、テロ資金供与、詐欺、その他の金融犯罪を防ぐためにすべての顧客の身元を確認することを義務付けています。これには、運転免許証やパスポートなどの政府発行の身分証明書を通じて、あなたの名前、生年月日、住所、社会保障番号を確認することが含まれます。これらの要件は恣意的な銀行のポリシーではなく、連邦法の義務であり、適切な管理を維持しない金融機関に対する重大な罰則と潜在的な刑事告発を伴います。ビジネスアカウントの場合、追加の文書が会社の設立、所有構造、実益所有者を検証し、匿名のシェル会社が不正な活動を促進することを防ぎます。ローン申請は、収入の確認、雇用の確認、資産の文書化を必要とし、貸し手が借りた資金を返済するあなたの能力を評価することを可能にし、銀行の資産とあなたの両方を、デフォルトと信用損害につながる可能性のある手頃でない債務を引き受けることから保護します。",
+            "metadata": {"language": "ja", "domain": "Compliance", "section": "Risk Management", "topic": "Regulations", "doc_type": "faq"},
+        },
+        {
+            "content": "疑わしい活動報告（SAR）は、マネーロンダリング、詐欺、またはその他の金融犯罪を示す可能性のある異常な取引を文書化します。金融機関は、最初の検出後30日以内にSARを提出する必要があり、対象者への提出を開示することを禁止されています。SARをトリガーする一般的なシナリオには、報告しきい値を回避するための取引の構造化、資金源または目的の不十分な説明、事業活動と一致しない取引パターン、複数のアカウント間での資金の急速な移動、高リスク管轄区域との取引が含まれます。通貨取引報告（CTR）は、単一の取引からであろうと複数の関連する取引からであろうと、10,000ドルを超える現金取引を文書化し、法執行分析のためにFinCENに報告します。四半期ごとのスタッフトレーニングは、すべての従業員がAML義務、レッドフラグ、報告手続きを理解することを保証します。独立した監査はプログラムの有効性を評価し、取引監視システム、文書の品質、規制遵守をテストします。シニアマネジメントは、AMLメトリクス、特定されたリスク、プログラムの強化に関する定期的な報告を受け取ります。",
+            "metadata": {"language": "ja", "domain": "Compliance", "section": "Risk Management", "topic": "Regulations", "doc_type": "manual"},
+        },
+        {
+            "content": "データプライバシー規制は、欧州の一般データ保護規則（GDPR）、カリフォルニア州消費者プライバシー法（CCPA）、および金融サービス近代化法のグラム・リーチ・ブライリー法（GLBA）を含む、顧客の個人情報を保護します。GLBAは金融機関にプライバシー通知を顧客に提供することを要求し、情報収集、共有、保護の慣行を説明します。顧客は、信用報告機関、マーケター、その他の第三者との特定の情報共有をオプトアウトする権利があります。セーフハーバー規定は、合理的なセキュリティ対策を実装する機関に対して一定の保護を提供します。データ侵害通知法は、セキュリティインシデントの影響を受けた個人への迅速な開示を要求し、タイムラインと内容要件は管轄区域によって異なります。個人を特定できる情報（PII）の収集と使用は、目的の制限と最小化の原則によって管理され、指定された目的に必要なデータのみを収集および保持します。データ保持ポリシーは、規制要件を満たしながら不必要な曝露を防ぐために情報がどのくらいの期間保持されるかを指定します。クロスボーダーデータ転送は、データ保護が適切であることを保証する追加の保護措置に従います。",
+            "metadata": {"language": "ja", "domain": "Compliance", "section": "Risk Management", "topic": "Regulations", "doc_type": "policy"},
+        },
+
+        # Customer Service + Accounts + Security (6 documents)
+        {
+            "content": "カスタマーサービス担当者は、アカウントセキュリティの懸念、アクセスの問題、詐欺報告、保護措置の実装に関する包括的な支援を24時間365日提供し、タイムゾーンや祝日に関係なく、常にヘルプが利用可能であることを保証します。担当者は、顧客が忘れた資格情報または複数の失敗したログイン試行によるセキュリティロックアウトのためにオンラインバンキングからロックアウトされた場合、パスワードリセットを支援できます。パスワード支援の検証プロセスは、アカウント保有者になりすました詐欺師に対する社会工学攻撃から保護するために、複数の認証要因を通じて身元の確認を必要とします。検証方法には、社会保障番号の最後の4桁、生年月日、最近の取引の詳細、アカウント開設時に確立されたセキュリティ質問への回答の提供が含まれます。追加の検証には、ファイルの電話番号または電子メールアドレスに送信されたワンタイムコード、または最も高いリスクの状況で進む前に絶対的な確実性を必要とする場合、正当な所有者のみが持つ特定のアカウント情報を提供することに挑戦する呼び出し元が含まれる場合があります。",
+            "metadata": {"language": "ja", "domain": "Customer Service", "section": "Accounts", "topic": "Security", "doc_type": "manual"},
+        },
+        {
+            "content": "紛失または盗難されたデビットカードの報告には、即座の通知が必要であり、即座のカード無効化を可能にし、さらなる無許可の使用を防ぎ、交換発行と詐欺請求処理を迅速化します。専用の詐欺ホットライン1-800-BANK-HELPは、カード詐欺パターン、請求手続き、保護措置のトレーニングを受けたスペシャリストと継続的に運営されています。紛失または盗難の報告を受け取ると、カードは銀行システムと支払いネットワーク内で即座に無効化され、その後の取引試行を防ぎます。交換カードは自動的に発行され、ファイルの郵送先住所に出荷され、通常、標準の郵便サービスを通じて3〜5営業日以内に到着します。旅行計画や代替支払い方法の欠如により、より速い交換が必要な顧客のために、25ドルで速達の翌日配達が利用可能です。交換カードが到着する前に即座の現金アクセスが必要な顧客のために、支店の場所で一時的なATM引き出し機能が手配できる場合があります。詐欺が発生していない紛失カードのシナリオは、請求の提出なしで単純な交換になります。無許可の取引を伴う盗難カードは、状況、取引の異議、利用可能な場合は警察の報告番号を説明する詳細な宣誓供述書を伴う正式な詐欺請求を必要とします。",
+            "metadata": {"language": "ja", "domain": "Customer Service", "section": "Accounts", "topic": "Security", "doc_type": "policy"},
+        },
+        {
+            "content": "個人情報盗難支援は、データ侵害、盗まれた文書、郵便盗難、または洗練された詐欺スキームを通じて個人情報が侵害されたことを発見した顧客に包括的なサポートを提供します。潜在的な個人情報盗難を発見したら、すぐに詐欺部門に連絡してください。そこでは、すべてのアカウント全体で保護措置を調整します。アカウントの凍結は新しい取引を防ぎ、レビューは無許可の活動が発生したかどうかを評価します。セキュリティアラートは、追加の検証なしに新しいアカウントの開設またはクレジットの延長を防ぐために配置されます。クレジットビューローの詐欺アラートは、個人情報盗難が発生したことをすべての潜在的な貸し手に通知し、クレジットを延長する前に追加の検証を要求します。クレジットフリーズは、特別なPINを使用してあなたの明示的な承認を除いてクレジットレポートへのアクセスを完全にブロックするより強力な保護を提供しますが、これは正当なクレジット申請を複雑にする可能性があります。警察報告の提出を支援し、多くの詐欺紛争プロセスに必要な公式文書を作成します。",
+            "metadata": {"language": "ja", "domain": "Customer Service", "section": "Accounts", "topic": "Security", "doc_type": "manual"},
+        },
+        {
+            "content": "オンラインバンキングの技術サポートは、ログインの困難、ナビゲーション支援、請求書支払いの問題、モバイルアプリの問題、機能利用の質問に対処し、顧客がデジタルバンキング機能を最大化するのを支援します。一般的なログインの問題には、忘れられたユーザーIDまたはパスワード、リセットが必要な期限切れの資格情報、複数の失敗した試行からロックされたアカウント、ブラウザの互換性の問題、または競合を作成するキャッシュされたデータが含まれます。ログイントラブルシューティングを試みる前にブラウザのキャッシュとCookieをクリアしてください。保存された情報はしばしば問題を引き起こすためです。オンラインバンキングがこれらの技術を必要とするため、JavaScriptとCookieが有効になっていることを確認してください。ポップアップブロッカーは時々セキュリティ検証ウィンドウを妨害し、一時的な無効化またはバンキングサイトを許可されたリストに追加する必要があります。多要素認証の問題は、電話番号の変更、紛失したデバイス、またはコード配信の遅延を含むことが多く、代替検証方法または更新された連絡先情報を通じて解決できます。",
+            "metadata": {"language": "ja", "domain": "Customer Service", "section": "Accounts", "topic": "Security", "doc_type": "policy"},
+        },
+        {
+            "content": "質問：アカウントに不正な活動があると疑った場合、何をすべきですか？回答：アカウントに疑わしいまたは無許可の取引に気付いた場合、即座の行動は損失を最小限に抑え、解決プロセスを開始するために重要です。まず、24時間365日の詐欺ホットライン1-800-FRAUD-00にすぐに電話してください。そこでは、専門の詐欺調査員が迅速に状況を評価し、必要に応じてアカウントを凍結し、調査プロセスを開始できます。詐欺が発生したかどうか不確かであっても報告を遅らせないでください。誤警報は報告されない詐欺よりもはるかに望ましいです。同時に、アクセス可能な場合はオンラインまたはモバイルバンキングにログインし、カード制御機能を使用してデビットカードを即座にロックし、追加の無許可の取引を防ぎます。詐欺は多くの場合、犯罪者がより大きな盗難を試みる前に小さなテスト取引から始まるため、少なくとも60日前にさかのぼってすべての最近のアカウント活動を注意深くレビューしてください。日付、金額、販売店名、調査員を助ける可能性のある情報を含む、すべての疑わしい取引を文書化してください。特にログイン資格情報が侵害された可能性があると疑う場合は、オンラインバンキングのパスワードとセキュリティの質問をすぐに変更してください。カード番号だけでなく身元が盗まれたと信じる場合は、警察報告を提出して、詐欺請求を強化し、一部の紛争プロセスに必要な公式文書を作成してください。",
+            "metadata": {"language": "ja", "domain": "Customer Service", "section": "Accounts", "topic": "Security", "doc_type": "faq"},
+        },
+        {
+            "content": "アカウントアラートとモニタリングサービスは、リアルタイムの通知を提供し、顧客がアカウント活動を常に把握し、不正な取引を迅速に特定できるようにします。カスタマイズ可能なアラートは、テキストメッセージ、電子メール、またはプッシュ通知を通じて配信でき、さまざまなトリガーに対して設定できます。一般的なアラートタイプには、しきい値を超える購入、ATM引き出し、定期的な預金の失敗、低残高警告、大規模な送金、国際取引が含まれます。リアルタイムアラートは、活動が発生してから数分以内に通知を送信し、顧客が詐欺を疑う場合は即座に対応できるようにします。毎日のアカウントサマリーは、前日のすべての取引の包括的なレビューを提供し、定期的な監視習慣を維持するのに役立ちます。予算アラートは、支出がカテゴリ制限に近づくと通知し、財務管理を支援します。セキュリティアラートは、新しいデバイスからのログイン、パスワードの変更、連絡先情報の更新を通知し、無許可のアカウントアクセスから保護します。",
+            "metadata": {"language": "ja", "domain": "Customer Service", "section": "Accounts", "topic": "Security", "doc_type": "manual"},
+        },
+
         # Finance + Loans + Interest Rates (5 examples)
         {
             "content": "Current mortgage interest rates vary significantly based on multiple factors including credit score, down payment percentage, loan term, property type, and loan-to-value ratio. Rates for conventional 30-year fixed-rate mortgages currently range from 6.5% to 7.2% APR for well-qualified borrowers with excellent credit scores above 740. Borrowers with credit scores between 680-739 typically see rates 0.25-0.5% higher, while those below 680 may face rates exceeding 8% or difficulty qualifying. Fixed-rate mortgages provide payment stability with unchanging interest rates throughout the loan term, protecting borrowers from future rate increases but potentially costing more initially compared to adjustable-rate alternatives. Adjustable-rate mortgages (ARMs) offer introductory rates typically 0.5-1.0% below fixed-rate mortgages, starting around 5.5-6.0% APR, but adjust after initial fixed periods of 5, 7, or 10 years based on market index movements plus predetermined margins. Rate caps limit annual and lifetime adjustments providing some protection against dramatic payment increases. Discount points can be purchased at closing, with each point costing 1% of the loan amount and reducing the interest rate by approximately 0.25%, creating potential long-term savings for borrowers planning to keep the mortgage beyond the break-even period. Government-backed loans including FHA and VA mortgages offer competitive rates for qualifying borrowers. Jumbo loans exceeding conforming loan limits carry slightly higher rates typically 0.25-0.75% above conventional mortgages. Rate locks protect approved rates for 30-60 days during the closing process.",
@@ -367,6 +777,84 @@ SYNTHETIC_DOCUMENTS = {
     ],
 
     "fluid_simulation": [
+        {
+            "content": "適切な乱流モデルの選択は、産業用数値流体力学（CFD）の基礎です。レイノルズ平均ナビエ・ストークス（RANS）アプローチは、計算コストの手頃さのため、ほとんどのエンジニアリング設計サイクルの主力であり続けています。RANSフレームワーク内で、k-イプシロンモデルは、ジェットや後流などの自由せん断流に対して堅牢性を示しますが、複雑な減衰関数なしでは壁近傍現象の解決に性能が劣ることが知られています。逆に、k-オメガせん断応力輸送（SST）モデルは、壁近傍でk-オメガモデルを遠方場でk-イプシロンモデルとブレンドすることにより、逆圧力勾配における流れの剥離を正確に予測するために特別に定式化されました。大規模で過渡的な乱流構造の高忠実度キャプチャを要求するシナリオでは、ラージエディシミュレーション（LES）が採用されますが、RANSよりも1〜2桁大きい計算リソースが必要です。実用的なハイブリッドは、デタッチドエディシミュレーション（DES）であり、付着境界層内でRANSを使用し、大規模に剥離した領域でLESにシームレスに切り替え、車両の抗力予測やストア分離研究などの外部空力応用のためのバランスの取れたアプローチを提供します。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "CFD", "topic": "Turbulence", "doc_type": "manual"},
+        },
+        {
+            "content": "この文書は、すべてのエンジニアリングシミュレーションプロジェクトにおける乱流モデル選択のための公式企業ポリシーを概説します。初期設計反復とシステムレベルのパフォーマンス分析には、k-オメガSST RANSモデルの使用が義務付けられています。これにより、異なるプロジェクトチーム間での結果の一貫性と比較可能性が保証されます。正式なメッシュ感度研究を実施し、文書化する必要があり、主要なパフォーマンスメトリクス（例：抗力係数、圧力降下）がさらなる細分化によって2％未満で変化することを実証します。高い迎角での翼型やディフューザーのパフォーマンスなど、流れの剥離が主要な懸念事項である安全上重要なコンポーネントの最終設計検証には、DESやLESなどのスケール解決シミュレーション（SRS）の使用が承認されますが、重大な計算費用のため、最高CFDエンジニアからの正式な承認が必要です。モデルの忠実度に関係なく、すべてのシミュレーションは、最終設計決定のために結果をリリースする前に、社内実験データまたは信頼できる公開ベンチマークケースに対して検証される必要があります。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "CFD", "topic": "Turbulence", "doc_type": "policy"},
+        },
+        {
+            "content": "質問：RANSとLESの根本的な違いは何ですか、そしてそれは私のプロジェクトにとってなぜ重要ですか？回答：RANSはすべての乱流スケールの効果をモデル化し、時間平均解を提供します。これは効率的で、平均的な力と熱伝達を予測するのに適しています。しかし、LESは、大きなエネルギーを含む渦を直接解決し、小さく、より普遍的なスケールのみをモデル化します。これにより、LESは、渦放出や空力音響ノイズなどの過渡現象をキャプチャすることができ、RANSではできません。あなたのプロジェクトの成功が非定常流体物理の理解に依存する場合、選択が重要です。定常状態のパフォーマンスメトリクスの場合、RANSは通常十分であり、はるかに費用対効果が高いです。質問：私のRANSシミュレーションは非物理的な振動を示しています。原因は何でしょうか？回答：これはしばしば数値的不安定性の兆候であり、物理的現象ではありません。一般的な犯人には、特に高勾配の領域での不十分に解決されたメッシュ、不適切な緩和係数、または入口での乱流粘度比が高すぎるなどの誤った境界条件の指定が含まれます。メッシュ品質とソルバー設定の体系的なチェックが推奨される最初のステップです。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "CFD", "topic": "Turbulence", "doc_type": "faq"},
+        },
+        {
+            "content": "レイノルズ応力モデル（RSM）は、より洗練されたクラスのRANS閉包を表します。等方性乱流を仮定する渦粘性モデルとは異なり、RSMはレイノルズ応力テンソルの各成分の輸送方程式を解きます。これにより、流線の曲率、回転、強い異方性乱流などの現象を自然に考慮することができ、これらは旋回燃焼器、サイクロン、非円形ダクトを通る複雑な内部流れで一般的です。しかし、この物理的精度の向上は、標準的なk-イプシロンモデルよりも通常50〜100％高い、かなりの計算コストがかかります。また、追加の方程式の密結合性のため、数値的安定性に関する課題を導入します。実装には、離散化スキームと緩和係数への慎重な注意が必要です。したがって、RSMは、乱流の異方性が平均流れに影響を与える支配的な物理メカニズムであることが知られている高度なユーザーと特定のアプリケーションに推奨されます。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "CFD", "topic": "Turbulence", "doc_type": "manual"},
+        },
+        {
+            "content": "遷移モデリングは、層流境界層が乱流になる重要な段階に対処し、このプロセスは摩擦抗力と熱伝達に大きく影響します。たとえば、ガンマ・シータモデルは、遷移の開始と範囲を予測するために2つの追加の輸送方程式を組み込んでいます。これは、タービンブレード冷却など、吸引側の層流を維持することで熱負荷を削減できるアプリケーションや、長時間飛行用に設計された高高度UAV翼にとって重要です。遷移を正確にキャプチャするには、微妙な不安定性メカニズムを解決するために、y+値が1に近い境界層内の非常に細かいメッシュが必要です。遷移を無視し、前縁から完全に乱流を仮定すると、過度に保守的な設計につながり、抗力の大幅な過大予測が生じ、より微妙なシミュレーションが明らかにできる潜在的なパフォーマンスゲインが失われる可能性があります。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "CFD", "topic": "Turbulence", "doc_type": "manual"},
+        },
+
+        # Research + Mesh Generation + Algorithms (5 documents)
+        {
+            "content": "適応メッシュ細分化（AMR）は、最も必要な場所にグリッド解像度を集中させることにより、計算リソースを動的に最適化する強力なアルゴリズム戦略です。プロセスは、ユーザー定義のエラー推定器によって駆動され、解場の高勾配、曲率、またはその他の関心のある特徴を継続的に監視します。最も一般的な技術であるH-細分化は、既存の要素（2Dでは四角形、3Dでは六面体など）をより小さなものに細分化し、局所的なポイント密度を効果的に増加させます。高次法で使用される代替であるP-細分化は、メッシュトポロジーを変更せずに要素内の多項式次数を増加させます。流体力学では、異方性細分化が特に効果的です。衝撃波やせん断層などの検出された特徴に沿ってセルを伸ばし、均一な細かいメッシュと比較して解の精度を維持または向上させながら、総セル数を50〜70％劇的に削減します。アルゴリズムは、細分化インターフェースでの「ハンギングノード」を処理するための複雑なデータ構造も管理し、解の連続性を確保する必要があります。",
+            "metadata": {"language": "ja", "domain": "Research", "section": "Mesh Generation", "topic": "Algorithms", "doc_type": "manual"},
+        },
+        {
+            "content": "この研究グループのポリシーは、出版グレードのシミュレーションのためのすべての計算メッシュが最小品質しきい値を保証するアルゴリズムを使用して生成されることを義務付けています。すべての四面体要素は、非圧縮性流れの場合は0.85未満の歪度と5:1未満のアスペクト比、圧縮性、超音速流れの場合は衝撃構造を適切にキャプチャするために3:1未満でなければなりません。六面体支配メッシュの場合、固有の品質のために、オクツリーベースまたは前進フロント法の使用が好まれます。さらに、LESまたはDNSを使用する予定のシミュレーションは、コルモゴロフスケールの適切な解像度の証拠を提供する必要があり、通常はスペクトル分析または局所的な乱流散逸率に基づくグリッド解像度基準を満たすことによって提供されます。メッシュファイルは、生成プロセスと品質メトリクスの完全なログとともに、シミュレーション結果と一緒にアーカイブされ、研究結果の再現性を確保する必要があります。",
+            "metadata": {"language": "ja", "domain": "Research", "section": "Mesh Generation", "topic": "Algorithms", "doc_type": "policy"},
+        },
+        {
+            "content": "質問：非構造化メッシングアルゴリズムと構造化メッシングアルゴリズムの実際的な違いは何ですか、そしていつどちらを選択すべきですか？回答：構造化メッシングアルゴリズムは、セルが規則的なマルチブロックトポロジーで配置されたグリッドを作成し、非常に効率的な計算と低い数値拡散につながります。しかし、それらは幾何学的に柔軟性がなく、複雑な幾何学形状には時間がかかります。非構造化メッシングアルゴリズム（四面体/プリズムを使用）は、複雑なCADモデルのメッシングを自動化するための膨大な柔軟性を提供しますが、同じ精度のためにより多くのセルと計算努力を必要とする場合があります。選択はアプリケーションに依存します：ターボ機械カスケードなどのよりシンプルで繰り返しの分析には構造化グリッドを使用し、生物医学インプラントや航空機全体の構成などの複雑な一回限りの幾何学形状には非構造化グリッドを使用します。壁にプリズム層、四面体充填を使用するハイブリッドアプローチは、一般的で効果的な妥協案です。",
+            "metadata": {"language": "ja", "domain": "Research", "section": "Mesh Generation", "topic": "Algorithms", "doc_type": "faq"},
+        },
+        {
+            "content": "ドローネ三角分割は、高品質な非構造化メッシュを生成するための基本的なアルゴリズムです。その核心原理は、メッシュ内のすべての三角形の最小角度を最大化することであり、これにより、ソルバーの精度と安定性を低下させる可能性のある形状の悪い「スライバー」要素を回避するのに役立ちます。アルゴリズムは、ドメインにポイントを段階的に挿入し、どのポイントも三角形の外接円の内側にないことを保証することによって機能します。3次元ドメインの場合、これは四面体の外接球に拡張されます。標準のドローネアルゴリズムは効率的ですが、ドメイン境界を尊重しない場合があり、制約付きドローネ細分化の必要性につながります。この変形により、必須のエッジとファセットの指定が可能になり、細分化プロセス中に保持されます。ラプラシアンまたは最適化ベースのスムージングなどの後続のメッシュスムージング技術は、メッシュ接続を変更せずに内部ノードを再配置することにより、要素の品質をさらに向上させるためによく適用されます。",
+            "metadata": {"language": "ja", "domain": "Research", "section": "Mesh Generation", "topic": "Algorithms", "doc_type": "manual"},
+        },
+        {
+            "content": "適合メッシュ生成とは、異なるメッシュブロックまたは領域間のインターフェースでセル面が完全に整列するメッシュの作成を指します。これは、複雑な補間スキームを必要とせずにフラックス保存と解の連続性を保証するため、多くの有限体積および有限要素ソルバーにとって重要な要件です。適合メッシュを作成するためのアルゴリズムには、通常、ドメインのグローバルパーティショニングと共有インターフェースの慎重で同期されたメッシングが含まれます。対照的に、非適合メッシングは、インターフェースで不一致のグリッドを許可し、一般化グリッドインターフェース（GGI）またはオーバーセット（キメラ）グリッドなどの技術を使用してデータを保存的に転送します。非適合方法は、タービンのロータ・ステータ相互作用などの相対運動を伴う問題に対して優れた柔軟性を提供しますが、インターフェースで小さな数値エラーを導入し、より洗練されたソルバーサポートを必要とします。",
+            "metadata": {"language": "ja", "domain": "Research", "section": "Mesh Generation", "topic": "Algorithms", "doc_type": "manual"},
+        },
+
+        # Development + CFD + Boundary Conditions (5 documents)
+        {
+            "content": "入口境界条件の指定は、シミュレーション全体の物理的リアリズムを決定できる重要なステップです。速度入口の場合、大きさと方向だけでなく、空間プロファイルも定義する必要があります。均一なプロファイルはシンプルですが、多くの場合非物理的です。より現実的なべき乗則または対数プロファイルは、乱流境界層に使用する必要があります。重要なことに、乱流パラメータは注意して設定する必要があります。変動強度の尺度である乱流強度は、レイノルズ数と上流の幾何学形状に基づいて推定できます。一方、乱流粘度比または特定の長さスケール（水力直径など）は、エネルギーを含む渦のサイズを定義します。熱的に結合された流れの場合、入口温度プロファイルを指定する必要があり、反応流の場合、種の質量分率が必要です。不適切に定義された入口は、長い流れの発達領域または完全に誤った流体物理につながり、下流で結果を無効にする可能性があります。",
+            "metadata": {"language": "ja", "domain": "Development", "section": "CFD", "topic": "Boundary Conditions", "doc_type": "policy"},
+        },
+        {
+            "content": "壁境界条件は、壁に対する流体速度がゼロである滑りなし条件を実装します。壁近傍のメッシュ解像度は、選択された処理と本質的にリンクしています。k-オメガSSTモデルなどの低レイノルズ数モデリングアプローチの場合、メッシュは粘性サブ層を解決するのに十分に細分化する必要があり、無次元壁距離y+が約1である必要があります。これには、高いアスペクト比を持つ非常に細かいグリッドが必要です。計算的なショートカットとして、壁関数を使用できます。これらは、壁と完全に乱流の領域の間の解をブリッジする半経験的な式であり、最初のセルセンターを30〜300の間のy+に配置できます。これにより、セル数が劇的に削減されますが、壁関数は、強い圧力勾配、剥離、衝突を伴う流れに対して不正確であることが知られています。開発チームは、どの壁処理が使用されたかを文書化し、シミュレートされている流体物理に対するその適合性を正当化する必要があります。",
+            "metadata": {"language": "ja", "domain": "Development", "section": "CFD", "topic": "Boundary Conditions", "doc_type": "manual"},
+        },
+        {
+            "content": "質問：対称ジオメトリの境界条件をどのように設定してモデルのサイズを削減すべきですか？回答：対称境界条件は、流れが鏡面対称である平面に適用されます。これは、すべての流れ変数に対してゼロ法線速度とゼロ法線勾配を課します。これは、計算ドメインを半分または4分の1にして、大幅なリソースを節約する優れた方法です。ただし、流れが本当に対称であることを確認することが重要です。幾何学形状または入ってくる流れのわずかな非対称性でさえ抑制され、誤った結果につながります。質問：反復中に逆流が発生する可能性のある内部流れに最適な出口条件は何ですか？回答：圧力出口は一般的に堅牢ですが、逆流が可能な場合は、「逆流」条件を指定することが不可欠です。これには、ドメインに再進入する可能性のある流体に対する全温度と乱流特性の現実的な値を提供することが含まれます。これらがないと、ソルバーは非物理的な内部値を使用する可能性があり、不安定性と収束の問題につながります。",
+            "metadata": {"language": "ja", "domain": "Development", "section": "CFD", "topic": "Boundary Conditions", "doc_type": "faq"},
+        },
+        {
+            "content": "周期的境界条件は、熱交換器コア、タービンブレードカスケード、または長いダクトの完全に発達した流れなどの繰り返しパターンを示す流れをシミュレートするための強力なツールです。流れの解を1つの境界（「周期的」面）から別の境界（「シャドウ」面）に線形に変換します。並進周期性と回転周期性の2つのタイプがあります。この条件により、より大きなシステムの小さな代表的な単位を効果的にシミュレートでき、最小限の計算ドメインで疑似無限の範囲を達成できます。周期性を適用する場合、周期的面とシャドウ面のメッシュがトポロジー的に同一である（つまり、適合している）ことが重要です。その後、ソルバーはこれらの2つの面を内部的に接続されたものとして扱い、インターフェース全体での質量、運動量、エネルギーの完全な保存を保証し、完全に発達した流れ状態への収束を劇的に加速します。",
+            "metadata": {"language": "ja", "domain": "Development", "section": "CFD", "topic": "Boundary Conditions", "doc_type": "manual"},
+        },
+        {
+            "content": "外部空力シミュレーションの場合、遠方場境界条件は自由流を表すために使用されます。最も一般的な実装は、特性ベース（またはリーマン）遠方場です。この境界条件は、特性の理論を使用して波をドメインから非反射的に伝播させます。これは、特に超音速流れまたは空力音響シミュレーションにおいて、解を汚染する可能性のある偽の数値反射を回避するために不可欠です。ユーザーは、自由流マッハ数、静圧と温度、流れの方向を指定する必要があります。この境界の有効性は、その配置に大きく依存します。流れの乱れ（バウショックまたは後流など）がドメインから十分に離れた本体の関心から十分に離れている必要があり、境界と強く相互作用しないように十分に減衰しています。経験則は、本体から少なくとも20〜50の特性長離れた場所に遠方場を配置することです。",
+            "metadata": {"language": "ja", "domain": "Development", "section": "CFD", "topic": "Boundary Conditions", "doc_type": "manual"},
+        },
+
+        # Engineering + Visualization + Algorithms (5 documents)
+        {
+            "content": "等値面抽出は、スカラー場を可視化するための基本的なアルゴリズムであり、データ値が一定である表面を作成します。マーチングキューブアルゴリズムは、これに対する古典的な方法であり、3Dグリッドをセルごとに処理して、等値面を近似する多角形表面を生成します。ベクトル場の可視化では、流線、流跡線、経路線を使用して流れの方向と構造を描写します。流線を生成するためのアルゴリズムには、シードポイントからベクトル場を数値的に積分することが含まれ、通常、精度のためにルンゲ・クッタ法（例：RK4）を使用します。適応ステップサイジングは、効率性と視覚的アーティファクトを回避するために重要であり、高曲率の領域でより小さなステップを取ります。大規模なデータセットの場合、並列粒子追跡アルゴリズムが使用され、シードポイントと積分ワークロードを複数のプロセッサまたはGPUに分散させ、数十億のセル全体で複雑で時間依存の流れパターンのインタラクティブな探索とアニメーションを可能にします。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "Visualization", "topic": "Algorithms", "doc_type": "manual"},
+        },
+        {
+            "content": "このポリシーは、すべてのエンジニアリングレビュー会議のための標準的な可視化プロトコルを確立します。圧力と速度分布の定量的分析の場合、指定されたカット平面での2D等高線プロットが必須です。複雑な3次元流れ構造の定性的評価の場合、圧力または渦度の大きさで色付けされた、Q基準の等値面を生成する必要があります。過渡シミュレーションを提示する場合、渦構造の進化を示すために、流線または粒子追跡のアニメーションシーケンスを提供する必要があります。すべての可視化は、一貫した科学的に正確なカラーマップ（例：Viridis、Plasma）を使用し、適切にラベル付けされたカラーバーを含める必要があります。ボリュームレンダリングの使用は探索的分析のために許可されていますが、定量的データを不明瞭にする可能性があるため、最終レポートでの唯一の可視化として使用されるべきではありません。すべての可視化出力は、最低解像度1920x1080ピクセルでアーカイブする必要があります。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "Visualization", "topic": "Algorithms", "doc_type": "policy"},
+        },
+        {
+            "content": "質問：複雑な流れ場で渦コアを可視化する最も効果的な方法は何ですか？回答：最も信頼できる方法は、速度勾配テンソルから導出されたガリレイ不変の尺度であるQ基準またはλ₂基準を使用することです。これらの方法は、純粋なせん断から旋回運動を区別します。渦コアエンベロープをキャプチャするために、正のQ値または負のλ₂値の等値面を生成します。次に、この等値面を別の関心のある変数、たとえば渦度の大きさまたは静圧（多くの場合低圧コアを示す）で色付けします。これらの特定された渦内で流線をシーディングすると、それらの回転と接続性がさらに明らかになります。動的なビューの場合、これらの流線を複数のタイムステップでアニメーション化すると、渦の形成、移流、最終的な崩壊が示され、非定常流体物理に対する深い洞察が提供されます。",
+            "metadata": {"language": "ja", "domain": "Engineering", "section": "Visualization", "topic": "Algorithms", "doc_type": "faq"},
+        },
         # --- Engineering + CFD + Turbulence ---
         {
             "content": "The selection of an appropriate turbulence model is a cornerstone of industrial Computational Fluid Dynamics (CFD). The Reynolds-Averaged Navier-Stokes (RANS) approach remains the workhorse for most engineering design cycles due to its computational affordability. Within the RANS framework, the k-epsilon model demonstrates robustness for free shear flows, such as jets and wakes, but is known to perform poorly in resolving near-wall phenomena without complex damping functions. Conversely, the k-omega Shear Stress Transport (SST) model was specifically formulated to accurately predict flow separation in adverse pressure gradients by blending the k-omega model near walls with the k-epsilon model in the far-field. For scenarios demanding high-fidelity capture of large-scale, transient turbulent structures, Large Eddy Simulation (LES) is employed, but it necessitates computational resources one to two orders of magnitude greater than RANS. A pragmatic hybrid is Detached Eddy Simulation (DES), which uses RANS within attached boundary layers and seamlessly switches to LES in massively separated regions, offering a balanced approach for external aerodynamics applications like vehicle drag prediction and store separation studies.",

@@ -1,13 +1,20 @@
 import gradio as gr
 import time
-from pathlib import Path
-from core.ingest import ingest
-from core.retrieval import generate, retrieval
-from core.index import MetaData
 import yaml
+import sys
+from pathlib import Path
 
-# Import evaluation functions
-from core.eval import (
+# Ensure project root is on sys.path when running this module as a script.
+_project_root = Path(__file__).resolve().parents[1]
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
+
+from src.core.ingest import ingest
+from src.core.retrieval import generate, retrieval
+from src.core.index import MetaData
+from src.core.synthetic_data import EvalQuery, SYNTHETIC_DOCUMENTS
+from src.core.eval import (
     run_full_evaluation, 
     save_results, 
     generate_summary_report,
@@ -183,7 +190,7 @@ def setup_synthetic_data(collections):
     
     try:
         docs_length = setup_test_data(collections)
-        return f"✅ Successfully ingested {docs_length} synthetic test data for each: {', '.join(collections)}"
+        return f"✅ Successfully ingested {docs_length} synthetic test data for: {', '.join(collections)}"
     except Exception as e:
         return f"❌ Error setting up test data: {str(e)}"
 
@@ -423,12 +430,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title="RAG Evaluation System") as demo:
     with gr.Tab("🧪 Evaluation"):
        
     
-        gr.Markdown("""
+        gr.Markdown(f"""
         ### Run Complete Evaluation
         
         This will:
-        1. Initial ingest synthetic test data (60 documents)
-        2. Run 15 predefined evaluation queries
+        1. Initial ingest synthetic test data ({sum(len(docs) for docs in SYNTHETIC_DOCUMENTS.values())} documents)
+        2. Run {len(EVAL_QUERIES)} predefined evaluation queries
         3. Generate comprehensive reports (CSV, JSON, Markdown)
         4. Compare Base RAG vs Hierarchical RAG
         """)
@@ -537,4 +544,4 @@ with gr.Blocks(theme=gr.themes.Soft(), title="RAG Evaluation System") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(mcp_server=True)

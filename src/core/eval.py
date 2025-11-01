@@ -431,7 +431,7 @@ def setup_test_data(collections: List[str] = None):
     print("\n" + "="*70)
     print("Setting up test data for evaluation")
     print("="*70 + "\n")
-    
+    tot_docs = 0
     for collection_name in collections:
         if collection_name not in SYNTHETIC_DOCUMENTS:
             print(f"⚠️  No synthetic data available for '{collection_name}', skipping...")
@@ -450,11 +450,11 @@ def setup_test_data(collections: List[str] = None):
         vectorstore = get_vectorstore(collection_name)
         ids = [str(uuid.uuid4()) for _ in range(len(documents))]
         vectorstore.add_documents(documents, ids=ids)
-
+        tot_docs += len(documents)
         print(f"✓ Completed '{collection_name}' collection")
     
     print("\n" + "="*70)
     print("Test data setup complete!")
     print("="*70 + "\n")
 
-    return len(documents)
+    return tot_docs
