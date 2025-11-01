@@ -4,28 +4,35 @@ import yaml
 import sys
 from pathlib import Path
 from dataclasses import asdict
-
+from typing import Optional, List, Literal
 # Ensure project root is on sys.path when running this module as a script.
 _project_root = Path(__file__).resolve().parents[1]
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
-
 from src.core.ingest import ingest
 from src.core.retrieval import generate, retrieval
 from src.core.index import MetaData
 from src.core.synthetic_data import EVAL_QUERIES, SYNTHETIC_DOCUMENTS
-from src.core.eval import (
-    run_full_evaluation, 
-    save_results, 
-    generate_summary_report,
-    setup_test_data,
-)
+from src.core.eval import run_full_evaluation, save_results
+from src.core.eval import generate_summary_report, setup_test_data
 
 
-def process_files(files, index_name, lang, domain, section, topic, doc_type):
+def ingest_files(files:List[str], index_name:str, lang:Literal["en", "ja"], domain:Optional[str], section:Optional[str], topic:Optional[str], doc_type:Optional[Literal["manual", "policy", "faq"]]):
     """
-    Loading, chunking, embedding, and storing in a vector DB.
+    Load, chunk, embed, and store files in a vector database.
+
+    Args:
+        files (list): A list of files to process.
+        index_name (str): The name of the index to store the files in.
+        lang (str): The language of the files.
+        domain (str): The domain of the files.
+        section (str): The section of the files.
+        topic (str): The topic of the files.
+        doc_type (str): The document type of the files.
+
+    Returns:
+        dict: A dictionary containing the status of the ingestion.
     """
     print("files uploaded", files)
     if not files:
@@ -44,7 +51,7 @@ def process_files(files, index_name, lang, domain, section, topic, doc_type):
     result = ingest(index_name, filter_data, files)
     return {"status": "success", "message": result}
 
-def add_metric(doc):
+def _add_metric(doc):
     return (f"\n### source: {doc.metadata.get('source_name','None')}"
             f"\n### similarity_score: {doc.metadata.get('similarity_score','None'):.4f}"
         )
@@ -64,7 +71,7 @@ def _rag_query(
     ret_start_time = time.time()
     
     docs = retrieval(question, index_name, active_filters)
-    retrieval_results = [doc.page_content + add_metric(doc) for doc in docs]
+    retrieval_results = [doc.page_content + _add_metric(doc) for doc in docs]
     snippets_md = "\n\n---\n\n".join(retrieval_results)
 
     ret_end_time = time.time()
@@ -82,11 +89,21 @@ def _rag_query(
     return answer, snippets_md
 
 
-def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_type):
+def run_rag_comparison(question:str, index_name:str, lang:Literal["en", "ja"], domain:Optional[str], section:Optional[str], topic:Optional[str], doc_type:Optional[Literal["manual", "policy", "faq"]]):
     """
-    Function to Runs two RAG simulations side-by-side.
-    This version is a generator: it yields a loading state first so the UI shows
-    a loading animation/text immediately, then yields final results.
+    Run two RAG simulations side-by-side for comparison.
+
+    Args:
+        question (str): The question to ask the RAG models.
+        index_name (str): The name of the index to query.
+        lang (str): The language of the query.
+        domain (str): The domain to filter by.
+        section (str): The section to filter by.
+        topic (str): The topic to filter by.
+        doc_type (str): The document type to filter by.
+
+    Returns:
+        tuple: A tuple containing the answers and snippets for both base and hierarchical RAG.
     """
     if not index_name:
         error_msg = "Please select an index to query."
@@ -120,7 +137,7 @@ def run_rag_comparison(question, index_name, lang, domain, section, topic, doc_t
     yield base_answer, base_snippets, hier_answer, hier_snippets
 
 
-def load_yaml_config(yaml_file):
+def _load_yaml_config(yaml_file):
     """
     Parses the uploaded YAML file and returns the config dictionary.
     """
@@ -142,10 +159,10 @@ def load_yaml_config(yaml_file):
         gr.Warning(f"Failed to load YAML config: {e}")
         return None
 
-def update_metadata_for_index_ingest(index, config):
+def _update_metadata_for_index_ingest(index, config):
     """
     Updates the Ingestion filter dropdowns based on the selected index and loaded config.
-    """
+    """ 
     if config is None or index is None:
         empty_update = gr.update(choices=[], value=None)
         return empty_update, empty_update, empty_update
@@ -162,7 +179,7 @@ def update_metadata_for_index_ingest(index, config):
         gr.update(choices=topics, value=topics[0] if topics else None)
     )
 
-def update_filters_for_index_chat(index, config):
+def _update_filters_for_index_chat(index, config):
     """
     Updates the Chat filter dropdowns based on the selected index and loaded config.
     """
@@ -183,8 +200,16 @@ def update_filters_for_index_chat(index, config):
     )
 
 
-def setup_synthetic_data(collections):
-    """Setup synthetic test data for evaluation"""
+def setup_synthetic_data(collections: List[str]):
+    """
+    Set up synthetic test data for evaluation.
+
+    Args:
+        collections (list): A list of collections to set up synthetic data for.
+
+    Returns:
+        str: A message indicating the status of the data setup.
+    """
     if not collections:
         return "⚠️ Please select at least one collection"
     
@@ -195,8 +220,18 @@ def setup_synthetic_data(collections):
         return f"❌ Error setting up test data: {str(e)}"
 
 
-def run_evaluation_batch(collections, output_dir, progress=gr.Progress(track_tqdm=True)):
-    """Run full batch evaluation"""
+def run_evaluation_batch(collections:List[str], output_dir:str, progress=gr.Progress(track_tqdm=True)):
+    """
+    Run a full batch evaluation.
+
+    Args:
+        collections (list): A list of collections to evaluate. 
+        output_dir (str): The directory to save the evaluation reports in.
+        progress (gradio.Progress): A Gradio progress object to track the evaluation progress.
+
+    Returns:
+        tuple: A tuple containing the evaluation status, summary statistics, and file paths for the generated reports.  
+     """         
     if not collections:
         return (
             "⚠️ Please select at least one collection",
@@ -329,7 +364,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="RAG Evaluation System") as demo:
                 ingest_output = gr.JSON(label="Ingestion Status and Sample Metadata")
 
         ingest_button.click(
-            fn=process_files,
+            fn=ingest_files,
             inputs=[
                 file_uploader,
                 index_select_ingest,
@@ -516,31 +551,36 @@ with gr.Blocks(theme=gr.themes.Soft(), title="RAG Evaluation System") as demo:
 
     # 1. When YAML is uploaded, store its content in config_state
     yaml_uploader.upload(
-        fn=load_yaml_config,
+        fn=_load_yaml_config,
         inputs=[yaml_uploader],
-        outputs=[config_state]
+        outputs=[config_state],
+        show_api=False
     ).then(
-        fn=update_metadata_for_index_ingest,
+        fn=_update_metadata_for_index_ingest,
         inputs=[index_select_ingest, config_state],
-        outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest]
+        outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest],
+        show_api=False
     ).then(
-        fn=update_filters_for_index_chat,
+        fn=_update_filters_for_index_chat,
         inputs=[index_select_chat, config_state],
-        outputs=[domain_select, section_select, topic_select]
+        outputs=[domain_select, section_select, topic_select],
+        show_api=False
     )
 
     # 2. When the Ingest index changes, update its metadata
     index_select_ingest.change(
-        fn=update_metadata_for_index_ingest,
+        fn=_update_metadata_for_index_ingest,
         inputs=[index_select_ingest, config_state],
-        outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest]
+        outputs=[domain_select_ingest, section_select_ingest, topic_select_ingest],
+        show_api=False
     )
 
     # 3. When the Chat index changes, update its filters
     index_select_chat.change(
-        fn=update_filters_for_index_chat,
+        fn=_update_filters_for_index_chat,
         inputs=[index_select_chat, config_state],
-        outputs=[domain_select, section_select, topic_select]
+        outputs=[domain_select, section_select, topic_select],
+        show_api=False
     )
 
 

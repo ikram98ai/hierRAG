@@ -93,28 +93,28 @@ class TestAPIBehaviors:
     
     def test_process_files_empty_input(self):
         """Test process_files with no files"""
-        from src.app import process_files
+        from src.app import ingest_files
         
-        result = process_files([], "hospital", "en", None, None, None, None)
+        result = ingest_files([], "hospital", "en", None, None, None, None)
         
         assert "Please upload at least one file" in result
     
     def test_process_files_no_index(self):
         """Test process_files without index selection"""
-        from src.app import process_files
+        from src.app import ingest_files
         
-        result = process_files(["file.pdf"], None, "en", None, None, None, None)
+        result = ingest_files(["file.pdf"], None, "en", None, None, None, None)
         
         assert "Please select an index" in result
     
     @patch('src.app.ingest')
     def test_process_files_success(self, mock_ingest):
         """Test successful file processing"""
-        from src.app import process_files
+        from src.app import ingest_files
         
         mock_ingest.return_value = "Successfully ingested 5 documents"
         
-        result = process_files(
+        result = ingest_files(
             ["file.pdf"],
             "hospital",
             "en",
@@ -162,7 +162,7 @@ class TestAPIBehaviors:
     
     def test_load_yaml_config_valid(self):
         """Test loading valid YAML configuration"""
-        from src.app import load_yaml_config
+        from src.app import _load_yaml_config
         
         # Create temporary YAML file
         yaml_content = """
@@ -180,7 +180,7 @@ hospital:
             mock_file = Mock()
             mock_file.name = temp_path
             
-            config = load_yaml_config(mock_file)
+            config = _load_yaml_config(mock_file)
             
             assert config is not None
             assert 'hospital' in config
@@ -190,7 +190,7 @@ hospital:
     
     def test_load_yaml_config_invalid(self):
         """Test loading invalid YAML configuration"""
-        from src.app import load_yaml_config
+        from src.app import _load_yaml_config
         
         # Invalid YAML content
         yaml_content = """
@@ -206,7 +206,7 @@ hospital:
             mock_file = Mock()
             mock_file.name = temp_path
             
-            config = load_yaml_config(mock_file)
+            config = _load_yaml_config(mock_file)
             
             assert config is None
         finally:
@@ -214,15 +214,15 @@ hospital:
     
     def test_load_yaml_config_none(self):
         """Test loading YAML with None input"""
-        from src.app import load_yaml_config
+        from src.app import _load_yaml_config
         
-        config = load_yaml_config(None)
+        config = _load_yaml_config(None)
         
         assert config is None
     
     def test_update_filters_for_index(self):
         """Test filter dropdown updates"""
-        from src.app import update_filters_for_index_chat
+        from src.app import _update_filters_for_index_chat
         
         config = {
             'hospital': {
@@ -232,7 +232,7 @@ hospital:
             }
         }
         
-        domain_update, section_update, topic_update = update_filters_for_index_chat(
+        domain_update, section_update, topic_update = _update_filters_for_index_chat(
             'hospital', config
         )
         
@@ -243,9 +243,9 @@ hospital:
     
     def test_update_filters_no_config(self):
         """Test filter updates with no config"""
-        from src.app import update_filters_for_index_chat
+        from src.app import _update_filters_for_index_chat
         
-        domain_update, section_update, topic_update = update_filters_for_index_chat(
+        domain_update, section_update, topic_update = _update_filters_for_index_chat(
             'hospital', None
         )
         

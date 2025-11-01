@@ -1,7 +1,6 @@
-include .env
-
 sync:
 	uv sync
+
 lint:
 	uv run ruff check
 
@@ -16,3 +15,6 @@ dev:
 
 test: 
 	uv run pytest tests
+
+deps:
+	uv pip compile pyproject.toml -o hierRAG/requirements.txt
