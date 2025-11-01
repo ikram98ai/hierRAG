@@ -7,6 +7,8 @@ import json
 import csv
 import time
 import uuid
+from tqdm import tqdm
+from random import shuffle
 from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
@@ -190,27 +192,19 @@ def run_full_evaluation(
     
     # Filter queries by requested collections
     queries_to_eval = [q for q in EVAL_QUERIES if q.collection in collections]
-    
+    shuffle(queries_to_eval)
     print(f"\n{'='*70}")
     print(f"Starting Evaluation: {len(queries_to_eval)} queries across {len(collections)} collections")
     print(f"{'='*70}\n")
     
-    for i, eval_query in enumerate(queries_to_eval, 1):
-        print(f"[{i}/{len(queries_to_eval)}] Evaluating: {eval_query.description}")
-        print(f"  Collection: {eval_query.collection}")
-        print(f"  Query: {eval_query.query[:60]}...")
-        
+    for eval_query in tqdm(queries_to_eval, desc="Running evaluation queries"):
         # Evaluate with base RAG
-        print("  - Running Base RAG...")
         base_result = evaluate_single_query(eval_query, "base")
         all_results["base"].append(base_result)
         
         # Evaluate with hierarchical RAG
-        print("  - Running Hierarchical RAG...")
         hier_result = evaluate_single_query(eval_query, "hierarchical")
         all_results["hierarchical"].append(hier_result)
-        
-        print(f"  ✓ Complete (Base: {base_result.total_latency_ms:.0f}ms, Hier: {hier_result.total_latency_ms:.0f}ms)\n")
     
     return all_results
 
@@ -408,8 +402,10 @@ def generate_summary_report(results: Dict[str, List[EvalResult]], output_dir: st
         f.write("## Detailed Query Results\n\n")
         
         # Sample queries with comparison
-        for i, (base_r, hier_r) in enumerate(zip(base_results[:5], hier_results[:5]), 1):
+        for i, (base_r, hier_r) in enumerate(zip(base_results[:20], hier_results[:20]), 1):
             f.write(f"### Query {i}: {base_r.query}\n\n")
+            f.write(f"### Base Response {i}:\n{base_r.generated_answer}\n\n")
+            f.write(f"### Hier Response {i}:\n{hier_r.generated_answer}\n\n")
             f.write(f"**Collection:** {base_r.collection}\n\n")
             
             f.write("| Aspect | Base RAG | Hierarchical RAG |\n")

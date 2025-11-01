@@ -3,6 +3,7 @@ import time
 import yaml
 import sys
 from pathlib import Path
+from dataclasses import asdict
 
 # Ensure project root is on sys.path when running this module as a script.
 _project_root = Path(__file__).resolve().parents[1]
@@ -13,13 +14,12 @@ if str(_project_root) not in sys.path:
 from src.core.ingest import ingest
 from src.core.retrieval import generate, retrieval
 from src.core.index import MetaData
-from src.core.synthetic_data import EvalQuery, SYNTHETIC_DOCUMENTS
+from src.core.synthetic_data import EVAL_QUERIES, SYNTHETIC_DOCUMENTS
 from src.core.eval import (
     run_full_evaluation, 
     save_results, 
     generate_summary_report,
     setup_test_data,
-    EVAL_QUERIES
 )
 
 
@@ -195,7 +195,7 @@ def setup_synthetic_data(collections):
         return f"❌ Error setting up test data: {str(e)}"
 
 
-def run_evaluation_batch(collections, output_dir):
+def run_evaluation_batch(collections, output_dir, progress=gr.Progress(track_tqdm=True)):
     """Run full batch evaluation"""
     if not collections:
         return (
@@ -254,11 +254,6 @@ def run_evaluation_batch(collections, output_dir):
             None,
             f"Error: {str(e)}"
         )
-
-def get_predefined_queries_list():
-    """Get list of predefined queries for dropdown"""
-    return [""] + [f"{i}: {q.model_dump()}" for i, q in enumerate(EVAL_QUERIES)]
-
 
 # --- Static choices (not from YAML) ---
 LANG_CHOICES = ["en", "ja"]
@@ -454,6 +449,11 @@ with gr.Blocks(theme=gr.themes.Soft(), title="RAG Evaluation System") as demo:
                     value="reports",
                     info="Directory where evaluation reports will be saved"
                 )
+
+                with gr.Accordion("SYNTHETIC_DOCUMENTS", open=False):
+                    gr.JSON(value=SYNTHETIC_DOCUMENTS)
+                with gr.Accordion("EVAL_QUERIES", open=False):
+                    gr.JSON(value=[asdict(q) for q in EVAL_QUERIES])
                 
                 with gr.Row():
                     setup_data_btn = gr.Button(
@@ -508,7 +508,8 @@ with gr.Blocks(theme=gr.themes.Soft(), title="RAG Evaluation System") as demo:
                 csv_download,
                 json_download,
                 eval_summary_md
-            ]
+            ],
+            show_progress="full"
         )
     
     # --- Event Handlers ---
