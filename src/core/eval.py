@@ -17,8 +17,9 @@ import numpy as np
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv, find_dotenv
-from .index import MetaData, get_vectorstore
+from .index import MetaData
 from .retrieval import retrieval, generate
+from .ingest import ingest_documents, get_chunks
 from .synthetic_data import SYNTHETIC_DOCUMENTS, EVAL_QUERIES, EvalQuery
 
 find_dotenv()
@@ -437,16 +438,17 @@ def setup_test_data(collections: List[str] = None):
         print(f"\n📚 Ingesting {len(docs)} documents into '{collection_name}' collection...")
         documents = []
         for i, doc_data in enumerate(docs, 1):
-        
             metadata = doc_data["metadata"]
-            metadata['source_name'] = collection_name+"_eval"
             doc = Document(page_content=doc_data["content"], metadata=metadata)
-            documents.append(doc)
+            metadata = MetaData(**metadata)
+            chunks = get_chunks([doc], metadata)
+            documents.extend(chunks)
 
-        vectorstore = get_vectorstore(collection_name)
-        ids = [str(uuid.uuid4()) for _ in range(len(documents))]
-        vectorstore.add_documents(documents, ids=ids)
-        tot_docs += len(documents)
+        # vectorstore = get_vectorstore(collection_name)
+        # ids = [str(uuid.uuid4()) for _ in range(len(documents))]
+        # vectorstore.add_documents(documents, ids=ids)
+        ingest_documents(documents, collection_name)
+        tot_docs += len(docs)
         print(f"✓ Completed '{collection_name}' collection")
     
     print("\n" + "="*70)

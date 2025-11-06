@@ -225,6 +225,7 @@ def setup_synthetic_data(collections: List[str]):
         docs_length = setup_test_data(collections)
         return f"✅ Successfully ingested {docs_length} synthetic test data for: {', '.join(collections)}"
     except Exception as e:
+        print(f"❌ Error setting up test data: {str(e)}")
         return f"❌ Error setting up test data: {str(e)}"
 
 

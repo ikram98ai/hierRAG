@@ -49,8 +49,8 @@ def get_chunks(documents: List[Document], metadata: MetaData):
             metadata={
                 "doc_id": doc_id,
                 "chunk_id": str(uuid.uuid4()),
-                "source_name": chunk.metadata["source"].split("/")[-1],
-                "start_index": chunk.metadata["start_index"],
+                "source_name": chunk.metadata.get("source",'Not Available').split("/")[-1],
+                "start_index": chunk.metadata.get("start_index",0),
                 **metadata.model_dump(),
             },
         )
