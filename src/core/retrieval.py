@@ -12,6 +12,7 @@ model = ChatOpenAI(model="gpt-5-nano")
 
 
 def reranker(query: str, docs: List[Document]) -> List[Document]:
+    """Rerank documents using BM25Retriever"""
     print(f"Retrieved {len(docs)} documents")
     if len(docs) <= 1:
         return docs
@@ -24,6 +25,7 @@ def reranker(query: str, docs: List[Document]) -> List[Document]:
 def retrieval(
     query: str, collection_name: str, filter_data: MetaData
 ) -> List[tuple[Document, float]]:
+    """Retrieve relevant documents from the vector store based on the query and filters."""
     vectorstore = get_vectorstore(collection_name)
     print(
         f"RETRIEVAL query: {query[:40]}, for {collection_name} collection, with filters: {filter_data}"
@@ -57,6 +59,7 @@ def retrieval(
 
 
 def generate(query: str, ctx_docs: List[Document]) -> str:
+    """Generate answer using the language model based on the query and context documents."""
     context = "\n".join([doc.page_content for doc in ctx_docs])
     prompt = f"""Answer shortly to the user question according to the given context. Only answer if the context is given to you.
     question: {query}

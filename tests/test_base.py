@@ -24,7 +24,7 @@ from unittest.mock import Mock, patch
 
 from langchain_core.documents import Document
 from src.core.index import MetaData
-from src.core.ingest import ingest
+from src.core.ingest import load_documents, get_chunks, ingest_documents
 from src.core.retrieval import retrieval
 from src.core.utils import mask_pii
 from src.core.eval import (
@@ -107,11 +107,14 @@ class TestAPIBehaviors:
         
         assert "Please select an index" in result
     
-    @patch('src.app.ingest')
-    def test_process_files_success(self, mock_ingest):
+    @patch('src.app.load_documents')
+    @patch('src.app.get_chunks')
+    @patch('src.app.ingest_documents')
+    def test_process_files_success(self, mock_ingest, mock_get_chunks, mock_load_documents):
         """Test successful file processing"""
         from src.app import ingest_files
-        
+        mock_load_documents.return_value = [Document(page_content="Test content", metadata={})]
+        mock_get_chunks.return_value = [Document(page_content="chunk", metadata={})]
         mock_ingest.return_value = "Successfully ingested 5 documents"
         
         result = ingest_files(
@@ -287,7 +290,10 @@ class TestIntegration:
                 doc_type="policy"
             )
             
-            result = ingest([temp_path], "test_collection", metadata)
+            docs = load_documents([temp_path])
+            chunks = get_chunks(docs, metadata)
+            result = ingest_documents(chunks, "test_collection")
+
             
             assert "Ingested" in result
             assert mock_vs.add_documents.called

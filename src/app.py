@@ -10,7 +10,7 @@ _project_root = Path(__file__).resolve().parents[1]
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
-from src.core.ingest import ingest
+from src.core.ingest import load_documents, get_chunks, ingest_documents
 from src.core.retrieval import generate, retrieval
 from src.core.index import MetaData
 from src.core.synthetic_data import EVAL_QUERIES, SYNTHETIC_DOCUMENTS
@@ -48,8 +48,16 @@ def ingest_files(files:List[str], index_name:str, lang:Literal["en", "ja"], doma
     filter_data = MetaData(
         language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
     )
-    result = ingest(index_name, filter_data, files)
-    return {"status": "success", "message": result}
+    try:
+        docs = load_documents(files)
+        chunks = get_chunks(docs, filter_data)
+        message = ingest_documents(chunks, index_name)
+    except Exception as e:
+        message = f"Error during ingestion: {str(e)}"
+        print(message)
+        return {"status": "error", "message": message}
+    
+    return {"status": "success", "message": message}
 
 def _add_metric(doc):
     return (f"\n### source: {doc.metadata.get('source_name','None')}"

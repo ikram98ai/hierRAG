@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from src.core.index import MetaData
-from src.core.ingest import ingest
+from src.core.ingest import load_documents, get_chunks, ingest_documents
 from src.core.retrieval import retrieval
 
 @pytest.fixture
@@ -190,7 +190,9 @@ class TestMetadataAndHierarchy:
                 mock_vs.return_value.add_documents = Mock()
                 
                 # Run ingestion
-                result = ingest([temp_path], "test_collection", sample_metadata)
+                docs = load_documents([temp_path])
+                chunks = get_chunks(docs, sample_metadata)
+                ingest_documents(chunks, "test_collection")
                 
                 # Verify add_documents was called
                 assert mock_vs.return_value.add_documents.called
