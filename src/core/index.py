@@ -5,7 +5,7 @@ from langchain_milvus import Milvus, BM25BuiltInFunction
 from typing import Literal, Optional
 from pydantic import BaseModel
 from dotenv import load_dotenv, find_dotenv
-
+import os
 find_dotenv()
 load_dotenv()
 
@@ -23,14 +23,14 @@ class MetaData(BaseModel):
 model = ChatOpenAI(model="gpt-5-nano")
 emb_model = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=1536)
 
-MILVUS_URI = "./data/rag_task.db"
-
+MILVUS_URI = os.getenv("MILVUS_URI","./data/rag_task.db")
+MILVUS_API_KEY = os.getenv("MILVUS_API_KEY","")
 
 def get_vectorstore(collection_name: str) -> Milvus:
     vectorstore = Milvus(
         embedding_function=emb_model,
         collection_name=collection_name,
-        connection_args={"uri": MILVUS_URI},
+        connection_args={"uri": MILVUS_URI,"token": MILVUS_API_KEY},
         index_params={"index_type": "FLAT", "metric_type": "L2"},
     )
     # builtin_function=BM25BuiltInFunction(output_field_names="sparse"),

@@ -59,9 +59,11 @@ def get_chunks(documents: List[Document], metadata: MetaData):
     return chunks
 
 
-def ingest_documents(docs: List[Document], collection_name: str):
+def ingest_documents(docs: List[Document], collection_name: str, vectorstore = None):
     """Ingest documents into the specified vectorstore collection."""
-    vectorstore = get_vectorstore(collection_name)
+    if vectorstore is None:
+        vectorstore = get_vectorstore(collection_name)
+        
     ids = [str(uuid.uuid4()) for _ in range(len(docs))]
     vectorstore.add_documents(docs, ids=ids)
     success_message = f"Ingested {len(docs)} documents into {collection_name} index."
