@@ -12,7 +12,7 @@ if str(_project_root) not in sys.path:
 
 from src.core.ingest import load_documents, get_chunks, ingest_documents
 from src.core.retrieval import generate, retrieval
-from src.core.index import MetaData
+from src.core.index import MetaData, get_vectorstore
 from src.core.synthetic_data import EVAL_QUERIES, SYNTHETIC_DOCUMENTS
 from src.core.eval import run_full_evaluation, save_results
 from src.core.eval import generate_summary_report, setup_test_data
@@ -49,9 +49,10 @@ def ingest_files(files:List[str], index_name:str, lang:Literal["en", "ja"], doma
         language=lang, domain=domain, section=section, topic=topic, doc_type=doc_type
     )
     try:
+        vectorstore = get_vectorstore(index_name)
         docs = load_documents(files)
         chunks = get_chunks(docs, filter_data)
-        message = ingest_documents(chunks, index_name)
+        message = ingest_documents(chunks, vectorstore)
     except Exception as e:
         message = f"Error during ingestion: {str(e)}"
         print(message)
@@ -77,8 +78,8 @@ def _rag_query(
     print(f"Active Filters: {active_filters.model_dump()}")
 
     ret_start_time = time.time()
-    
-    docs = retrieval(question, index_name, active_filters)
+    vectorstore = get_vectorstore(index_name)
+    docs = retrieval(question, active_filters, vectorstore)
     retrieval_results = [doc.page_content + _add_metric(doc) for doc in docs]
     snippets_md = "\n\n---\n\n".join(retrieval_results)
 

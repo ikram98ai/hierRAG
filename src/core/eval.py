@@ -17,7 +17,7 @@ import numpy as np
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv, find_dotenv
-from .index import MetaData
+from .index import MetaData, get_vectorstore
 from .retrieval import retrieval, generate
 from .ingest import ingest_documents, get_chunks
 from .synthetic_data import SYNTHETIC_DOCUMENTS, EVAL_QUERIES, EvalQuery
@@ -27,7 +27,6 @@ load_dotenv()
 
 # Embedding model for semantic similarity
 emb_model = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=1536)
-
 
 @dataclass
 class EvalResult:
@@ -131,7 +130,8 @@ def evaluate_single_query(
     
     # Retrieval
     ret_start = time.time()
-    docs = retrieval(eval_query.query, eval_query.collection, filters)
+    vectorstore = get_vectorstore("eval_"+eval_query.collection)
+    docs = retrieval(eval_query.query, filters, vectorstore)
     ret_end = time.time()
     ret_latency = (ret_end - ret_start) * 1000  # Convert to ms
     
@@ -443,11 +443,9 @@ def setup_test_data(collections: List[str] = None):
             metadata = MetaData(**metadata)
             chunks = get_chunks([doc], metadata)
             documents.extend(chunks)
-
-        # vectorstore = get_vectorstore(collection_name)
-        # ids = [str(uuid.uuid4()) for _ in range(len(documents))]
-        # vectorstore.add_documents(documents, ids=ids)
-        ingest_documents(documents, collection_name)
+            
+        vectorstore = get_vectorstore("eval_"+collection_name, drop_old=True)
+        ingest_documents(documents, vectorstore)
         tot_docs += len(docs)
         print(f"✓ Completed '{collection_name}' collection")
     

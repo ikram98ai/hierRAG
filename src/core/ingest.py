@@ -1,12 +1,12 @@
 from langchain_community.document_loaders import PDFMinerLoader,TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_milvus import Milvus
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv, find_dotenv
 from typing import List
 import uuid
 
-from src.core.index import get_vectorstore
 from .index import MetaData
 from .utils import mask_pii
 
@@ -59,14 +59,12 @@ def get_chunks(documents: List[Document], metadata: MetaData):
     return chunks
 
 
-def ingest_documents(docs: List[Document], collection_name: str, vectorstore = None):
+def ingest_documents(docs: List[Document], vectorstore:Milvus):
     """Ingest documents into the specified vectorstore collection."""
-    if vectorstore is None:
-        vectorstore = get_vectorstore(collection_name)
-        
+    
     ids = [str(uuid.uuid4()) for _ in range(len(docs))]
     vectorstore.add_documents(docs, ids=ids)
-    success_message = f"Ingested {len(docs)} documents into {collection_name} index."
+    success_message = f"Ingested {len(docs)} documents into {vectorstore.collection_name} index."
     print(success_message)
     return success_message
 

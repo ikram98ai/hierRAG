@@ -26,12 +26,13 @@ emb_model = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=1536)
 MILVUS_URI = os.getenv("MILVUS_URI","./data/rag_task.db")
 MILVUS_API_KEY = os.getenv("MILVUS_API_KEY","")
 
-def get_vectorstore(collection_name: str) -> Milvus:
+def get_vectorstore(collection_name: str, drop_old=False) -> Milvus:
     vectorstore = Milvus(
         embedding_function=emb_model,
         collection_name=collection_name,
         connection_args={"uri": MILVUS_URI,"token": MILVUS_API_KEY},
         index_params={"index_type": "FLAT", "metric_type": "L2"},
+        drop_old=drop_old,
     )
     # builtin_function=BM25BuiltInFunction(output_field_names="sparse"),
     # text_field="text",

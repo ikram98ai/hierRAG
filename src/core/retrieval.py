@@ -1,10 +1,10 @@
 from langchain_core.documents import Document
-from langchain_openai import ChatOpenAI
 from langchain_community.retrievers import BM25Retriever
+from langchain_openai import ChatOpenAI
+from langchain_milvus import Milvus
 from dotenv import load_dotenv, find_dotenv
 from typing import List
-from .index import get_vectorstore, MetaData
-
+from .index import MetaData
 find_dotenv()
 load_dotenv()
 
@@ -23,12 +23,11 @@ def reranker(query: str, docs: List[Document]) -> List[Document]:
 
 
 def retrieval(
-    query: str, collection_name: str, filter_data: MetaData
+    query: str, filter_data: MetaData, vectorstore: Milvus
 ) -> List[tuple[Document, float]]:
     """Retrieve relevant documents from the vector store based on the query and filters."""
-    vectorstore = get_vectorstore(collection_name)
     print(
-        f"RETRIEVAL query: {query[:40]}, for {collection_name} collection, with filters: {filter_data}"
+        f"RETRIEVAL query: {query[:40]}, for {vectorstore.collection_name} collection, with filters: {filter_data}"
     )
 
     filters = [f'language == "{filter_data.language}"']
