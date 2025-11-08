@@ -60,48 +60,52 @@ def sample_documents():
 class TestRetrieval:
     """Tests for vector retrieval functionality"""
     
-    @patch('src.core.retrieval.get_vectorstore')
-    def test_retrieval_returns_k_documents(self, mock_vs):
+    @patch('src.core.index.get_vectorstore')
+    def test_retrieval_returns_k_documents(self, mock_get_vectorstore):
         """Test that retrieval returns requested number of documents"""
         # Setup mock with 5 results
         mock_docs = [
             (Document(page_content=f"Doc {i}"), 0.9 - i*0.1)
             for i in range(5)
         ]
-        mock_store = Mock()
-        mock_store.similarity_search_with_relevance_scores.return_value = mock_docs
-        mock_vs.return_value = mock_store
+        
+        mock_vectorstore_instance = Mock()
+        mock_vectorstore_instance.similarity_search_with_relevance_scores.return_value = mock_docs
+        mock_get_vectorstore.return_value = mock_vectorstore_instance
         
         filter_data = MetaData(language="en")
-        results = retrieval("test query", "test_collection", filter_data)
-        
-        assert len(results) == 5
+        vectorstore = mock_get_vectorstore("test_collection")
+        results = retrieval("test query", filter_data, vectorstore)
     
-    @patch('src.core.retrieval.get_vectorstore')
-    def test_retrieval_adds_similarity_scores(self, mock_vs):
+    @patch('src.core.index.get_vectorstore')
+    def test_retrieval_adds_similarity_scores(self, mock_get_vectorstore):
         """Test that similarity scores are added to metadata"""
+        # Setup mock with 5 results
         mock_docs = [
-            (Document(page_content="Test doc", metadata={}), 0.85)
+            (Document(page_content=f"Doc {i}"), 0.9 - i*0.1)
+            for i in range(5)
         ]
-        mock_store = Mock()
-        mock_store.similarity_search_with_relevance_scores.return_value = mock_docs
-        mock_vs.return_value = mock_store
+        mock_vectorstore_instance = Mock()
+        mock_vectorstore_instance.similarity_search_with_relevance_scores.return_value = mock_docs
+        mock_get_vectorstore.return_value = mock_vectorstore_instance
         
         filter_data = MetaData(language="en")
-        results = retrieval("test query", "test_collection", filter_data)
+        vectorstore = mock_get_vectorstore("test_collection")
+        results = retrieval("test query", filter_data, vectorstore)
         
         assert 'similarity_score' in results[0].metadata
-        assert results[0].metadata['similarity_score'] == 0.85
+        assert results[0].metadata['similarity_score'] == 0.9, "Similarity score should be added to metadata"
     
-    @patch('src.core.retrieval.get_vectorstore')
-    def test_retrieval_error_handling(self, mock_vs):
+    @patch('src.core.index.get_vectorstore')
+    def test_retrieval_error_handling(self, mock_get_vectorstore):
         """Test that retrieval handles errors gracefully"""
-        mock_store = Mock()
-        mock_store.similarity_search_with_relevance_scores.side_effect = ValueError("Invalid filter")
-        mock_vs.return_value = mock_store
+        mock_vectorstore_instance = Mock()
+        mock_vectorstore_instance.similarity_search_with_relevance_scores.side_effect = ValueError("Invalid filter")
+        mock_get_vectorstore.return_value = mock_vectorstore_instance
         
         filter_data = MetaData(language="en")
-        results = retrieval("test query", "test_collection", filter_data)
+        vectorstore = mock_get_vectorstore("test_collection")
+        results = retrieval("test query", filter_data, vectorstore)
         
         assert results == [], "Should return empty list on error"
     

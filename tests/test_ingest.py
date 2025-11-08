@@ -186,16 +186,17 @@ class TestMetadataAndHierarchy:
         
         try:
             # Mock the vectorstore to avoid actual DB operations
-            with patch('src.core.ingest.get_vectorstore') as mock_vs:
+            with patch('src.core.index.get_vectorstore') as mock_vs:
                 mock_vs.return_value.add_documents = Mock()
                 
                 # Run ingestion
                 docs = load_documents([temp_path])
                 chunks = get_chunks(docs, sample_metadata)
-                ingest_documents(chunks, "test_collection")
+                vectorstore = mock_vs.return_value
+                ingest_documents(chunks, vectorstore)
                 
                 # Verify add_documents was called
-                assert mock_vs.return_value.add_documents.called
+                assert mock_vs.return_value.add_documents.called, "add_documents should be called during ingestion"
                 
                 # Get the documents that were added
                 call_args = mock_vs.return_value.add_documents.call_args
@@ -292,7 +293,7 @@ class TestMetadataFiltering:
         assert 'domain == "Healthcare"' in expr
         assert 'section' not in expr
     
-    @patch('src.core.retrieval.get_vectorstore')
+    @patch('src.core.index.get_vectorstore')
     def test_retrieval_applies_filters(self, mock_vs):
         """Test that retrieval actually applies filters"""
         # Setup mock
@@ -305,8 +306,8 @@ class TestMetadataFiltering:
             language="en",
             domain="Healthcare"
         )
-        
-        retrieval("test query", "test_collection", filter_data)
+        vectorstore = mock_vs.return_value
+        retrieval("test query", filter_data, vectorstore)
         
         # Check that similarity_search was called with expr
         call_args = mock_store.similarity_search_with_relevance_scores.call_args
@@ -316,7 +317,7 @@ class TestMetadataFiltering:
         assert 'language == "en"' in call_args[1]['expr']
         assert 'domain == "Healthcare"' in call_args[1]['expr']
     
-    @patch('src.core.retrieval.get_vectorstore')
+    @patch('src.core.index.get_vectorstore')
     def test_retrieval_handles_no_results(self, mock_vs):
         """Test that retrieval handles empty results gracefully"""
         # Setup mock to return empty results
@@ -325,6 +326,7 @@ class TestMetadataFiltering:
         mock_vs.return_value = mock_store
         
         filter_data = MetaData(language="en")
-        results = retrieval("test query", "test_collection", filter_data)
+        vectorstore = mock_vs.return_value
+        results = retrieval("test query", filter_data, vectorstore)
         
         assert results == []
